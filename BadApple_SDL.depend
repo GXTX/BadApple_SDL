@@ -1,0 +1,23 @@
+# depslib dependency file v1.0
+1454151945 source:/home/koswu/编程/C语言/SDL Project/BadApple_SDL/function.c
+	"SDL/SDL.h"
+	"SDL/SDL_image.h"
+	"SDL/SDL_ttf.h"
+	"SDL/SDL_mixer.h"
+	"common.h"
+	"error.h"
+
+1437578252 /home/koswu/编程/C语言/SDL Project/BadApple_SDL/common.h
+	<stdbool.h>
+	<stdlib.h>
+
+1454151828 /home/koswu/编程/C语言/SDL Project/BadApple_SDL/error.h
+
+1454151855 source:/home/koswu/编程/C语言/SDL Project/BadApple_SDL/main.c
+	"SDL/SDL.h"
+	"SDL/SDL_image.h"
+	"SDL/SDL_ttf.h"
+	"SDL/SDL_mixer.h"
+	"common.h"
+	"error.h"
+
