@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1454151945 source:/home/koswu/编程/C语言/SDL Project/BadApple_SDL/function.c
+1454152303 source:/home/koswu/编程/C语言/SDL Project/BadApple_SDL/function.c
 	"SDL/SDL.h"
 	"SDL/SDL_image.h"
 	"SDL/SDL_ttf.h"
