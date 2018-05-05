@@ -1,6 +1,6 @@
 BadApple_SDL
 ===============
-一个基于SDL库的BadApple动画，可用C4droid编译
+一个基于SDL库的BadApple动画
 ----------------------------------------------
 An "Bad Apple!!"Anime based SDL lib
 ---------------------------------------------
@@ -11,13 +11,17 @@ An "Bad Apple!!"Anime based SDL lib
 安装依赖库
 >SDL SDL_mixer SDL_ttf SDL_image
 
-GCC:使用
+Linux下使用cmake编译
 
-    gcc main.c function.c -lSDL -lSDL_mixer -lSDL_ttf -lSDL_image
+```
+    mkdir build
+    cd build
+    cmake ../
+    make
+    ./badapple
+```
 
-命令编译，直接运行生成的可执行文件
 
-或直接使用CodeBlock打开项目文件编译运行
 *************************************************
 使用说明：
 
