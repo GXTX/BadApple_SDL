@@ -1,6 +1,5 @@
 #include "main.h"
 
-/*主函数*/
 int main(void)
 {
 	SDL *sdl = malloc(sizeof(SDL));
@@ -26,7 +25,7 @@ int main(void)
 		file_to_surface(sdl, ttf->Font, &video);
 
 		PrintFPS(sdl, ttf->Font);
-		//PrintFPS();
+
 		update_screen(sdl, fps);
 
 		while (SDL_PollEvent(&sdl->Event)) {
@@ -44,19 +43,19 @@ the_end:
 void init_backends(SDL *sdl, TTF *ttf, MIX *mix, Timer *fps)
 {
 	if (SDL_Init((SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS)) < 0) {
-		printf("%s\n", SDL_GetError());
+		//printf("%s\n", SDL_GetError());
 		//goto the_end;
 	}
 
 	sdl->Window = SDL_CreateWindow("Bad Apple!!", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, 0);
 	sdl->Surface = SDL_GetWindowSurface(sdl->Window);
 	if (sdl->Surface == NULL) {
-		printf("%s\n", SDL_GetError());
+		//printf("%s\n", SDL_GetError());
 		//goto the_end;
 	}
 
 	if (TTF_Init() < 0) {
-		printf("%s\n", TTF_GetError());
+		//printf("%s\n", TTF_GetError());
 		//goto the_end;
 	}
 
@@ -65,16 +64,22 @@ void init_backends(SDL *sdl, TTF *ttf, MIX *mix, Timer *fps)
 
 void init_files(TTF *ttf, MIX *mix, FILE **video)
 {
+#ifdef NXDK
+	static const char *font  = "D:\\resource\\consola.ttf";
+	static const char *music = "D:\\resource\\Badapple.ogg";
+	static const char *video_file = "D:\\resource\\AscPic.txt";
+#else
 	static const char *font  = "resource/consola.ttf";
 	static const char *music = "resource/Badapple.mp3";
 	static const char *video_file = "resource/AscPic.txt";
+#endif
 
 	ttf->Font = TTF_OpenFont(font, 9);
 	ttf->FpsFont = TTF_OpenFont(font, 20);
 
 	*video = fopen(video_file, "r");
 	if (*video == NULL) {
-		printf("Unable to open file: 0x%X\n", errno);
+		//printf("Unable to open file: 0x%X\n", errno);
 		//goto the_end;
 	}
 
@@ -90,7 +95,7 @@ void update_screen(SDL *sdl, Timer *fps)
 	fps->last_time = SDL_GetTicks();
 
 	if (SDL_UpdateWindowSurface(sdl->Window) < 0) {
-		printf("%s\n", SDL_GetError());
+		//printf("%s\n", SDL_GetError());
 		//goto the_end;
 	}
 
@@ -114,7 +119,7 @@ void file_to_surface(SDL *sdl, TTF_Font *font, FILE **video)
 
 		sdl->video = TTF_RenderText_Solid(font, buffer, sdl->FontColor);
 		if (sdl->video == NULL){
-			printf("%s\n", SDL_GetError());
+			//printf("%s\n", SDL_GetError());
 			//goto the_end;
 		}
 
@@ -136,8 +141,6 @@ void file_to_surface(SDL *sdl, TTF_Font *font, FILE **video)
 void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_Rect *cli)
 {
 	SDL_Rect location = {x, y, 0, 0};
-	//location.x = x;
-	//location.y = y;
 	SDL_BlitSurface(source, cli, target, &location);
 }
 
