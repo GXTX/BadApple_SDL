@@ -1,130 +1,119 @@
-/*头文件声明*/
-#ifdef NXDK
-#include <SDL.h>
-#include <SDL_ttf.h>
-#include <SDL_mixer.h>
-#include <hal/debug.h>
-#include <hal/video.h>
-#else
-#include "SDL2/SDL.h"
-#include "SDL2/SDL_ttf.h"
-#include "SDL2/SDL_mixer.h"
-#endif
-#include "common.h"
-#include "error.h"
-
-/*内部类型声明*/
-void Load_File(void);
-/*外部函数声明*/
-extern void Init(void);																			  //初始化SDL
-extern void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_Rect *cli); //复制表面
-extern void Error(int errorcode);																  //错误报告
-extern SDL_Surface *Print_Text(char *text);														  //渲染文字
-extern void SetTextColor(unsigned short r, unsigned short g, unsigned short b);					  //设置字体颜色
-extern Mix_Music *Load_Music(const char *path);													  //加载音乐
-extern void Flip_Screen(void);																	  //刷新屏幕
-extern void Set_ScreenColor(unsigned short r, unsigned short g, unsigned short b);				  //设置背景色
-extern void PrintFPS(void);																		  //打印FPS
-
-/*内部函数声明*/
-void Clean_Up(void);
-void Load_File(void);
-void Print_Ascii(void);
-
-/*全局变量声明*/
-extern SDL_Window *Window;
-extern SDL_Surface *Screen; //屏幕表面
-extern SDL_Surface *Point;
-extern SDL_Event Event; //事件类型
-extern SDL_Color Fontcolor;
-extern TTF_Font *Font;
-extern Timer Fps;
-extern int Frame;
-extern TTF_Font *FPSFont;
-
-/*文件变量声明*/
-FILE *AscPic;
-char Ascch[200] = "ddd";
-SDL_Surface *AscFace;
-Mix_Music *bgm;
-TTF_Font *Default_Font;
+#include "main.h"
 
 /*主函数*/
 int main(void)
 {
+	SDL *sdl = malloc(sizeof(SDL));
+	TTF *ttf = malloc(sizeof(TTF));
+	MIX *mix = malloc(sizeof(MIX));
+
+	Timer *fps;
+	FILE *video;
+
 #ifdef NXDK
 	XVideoSetMode(WIDTH, HEIGHT, BPP, REFRESH_DEFAULT);
 #endif
-	/*变量*/
-	bool quit = false;
-	/*加载环境*/
-	Init();
-	/*加载背景颜色*/
-	Set_ScreenColor(0x3F, 0x3F, 0x3F);
-	SetTextColor(0xFF, 0xFF, 0xFF);
-	/*加载文件*/
-	Load_File();
-	/*刷新屏幕*/
-	Print_Ascii();
-	Set_ScreenColor(0x3F, 0x3F, 0x3F);
-	Print_Ascii();
-	Flip_Screen();
-	/*播放音乐*/
-	Mix_VolumeMusic(MIX_MAX_VOLUME);
-	if (Mix_PlayMusic(bgm, 1) < 0)
-	{
-		return 1;
-	}
-#ifdef NXDK
-// this is really bad, not sure why this is happening but audio will only play
-// when we set both PlayMusic and PlayChannel with a WAV chunk
-// nxdk bug?
-	Mix_Chunk *test = Mix_LoadWAV("D:\\resource\\Badapple.wav");
-	Mix_PlayChannel(-1, test, 1);
-#endif
-	/*保持屏幕存在*/
-	while (quit == false)
-	{
-		Set_ScreenColor(0x3F, 0x3F, 0x3F);
-		Print_Ascii();
-		PrintFPS();
-		Flip_Screen();
 
-		while (SDL_PollEvent(&Event))
-		{
-			if (Event.type == SDL_QUIT)
-			{
-				quit = true;
+	init_backends(sdl, ttf, mix, fps);
+
+	// Do we really need to do this?
+	//SDL_FillRect(sdl->Surface, &(sdl->Surface->clip_rect), 
+	//	SDL_MapRGB(sdl->Surface->format, 0x3F, 0x3F, 0x3F));
+	//Set_ScreenColor(sdl->Surface, 0x3F, 0x3F, 0x3F);
+
+	// Do we really need to do this?
+	//sdl->FontColor = {0xFF, 0xFF, 0xFF, 0xFF};
+	//SetTextColor(0xFF, 0xFF, 0xFF);
+
+	init_files(ttf, mix, video);
+
+	/*刷新屏幕*/
+	// copy file buffer to sdl->Surface
+	//file_to_surface(sdl, ttf->Font, video);
+
+	// Required?
+	//Set_ScreenColor(0x3F, 0x3F, 0x3F);
+
+	// Why are we ignoring the first 2 sets of "frames"?
+	//file_to_surface(sdl, ttf->Font, video);
+
+	// Why?
+	update_screen(sdl, fps);
+
+	while (1) {
+		//Set_ScreenColor(0x3F, 0x3F, 0x3F);
+		//file_to_surface(sdl, ttf->Font, video);
+		//PrintFPS();
+		update_screen(sdl, fps);
+
+		while (SDL_PollEvent(&sdl->Event)) {
+			if (sdl->Event.type == SDL_QUIT) {
+				//goto the_end;
 			}
 		}
 	}
-	/*清理*/
+
+the_end:
 	Clean_Up();
 	return 0;
 }
 
-void Load_File(void)
+void init_backends(SDL *sdl, TTF *ttf, MIX *mix, Timer *fps)
 {
-#ifdef NXDK
-	Font = TTF_OpenFont("D:\\resource\\consola.ttf", 9);
-	FPSFont = TTF_OpenFont("D:\\resource\\consola.ttf", 20);
-	AscPic = fopen("D:\\resource\\AscPic.txt", "r");
-	bgm = Load_Music("D:\\resource\\Badapple.ogg");
-#else
-	Font = TTF_OpenFont("resource/consola.ttf", 9);
-	FPSFont = TTF_OpenFont("resource/consola.ttf", 20);
-	AscPic = fopen("resource/AscPic.txt", "r");
-	bgm = Load_Music("resource/Badapple.mp3");
-#endif
-	if (AscPic == NULL)
-	{
-		Error(0x9F);
+	if (SDL_Init((SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS)) < 0) {
+		printf("%s\n", SDL_GetError());
+		//goto the_end;
 	}
+
+	sdl->Window = SDL_CreateWindow("Bad Apple!!", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, 0);
+	sdl->Surface = SDL_GetWindowSurface(sdl->Window);
+	if (sdl->Surface == NULL) {
+		printf("%s\n", SDL_GetError());
+		//goto the_end;
+	}
+
+	if (TTF_Init() < 0) {
+		printf("%s\n", TTF_GetError());
+		//goto the_end;
+	}
+
+	fps->last_time = SDL_GetTicks();
 }
 
+void init_files(TTF *ttf, MIX *mix, FILE *video)
+{
+	ttf->Font = TTF_OpenFont(font, 9);
+	ttf->FpsFont = TTF_OpenFont(font, 20);
+
+	video = fopen(video_file, "r");
+	if (video == NULL) {
+		printf("Unable to open file: 0x%X\n", errno);
+		//goto the_end;
+	}
+
+	//bgm = Load_Music("resource/Badapple.mp3");
+}
+
+void update_screen(SDL *sdl, Timer *fps)
+{
+	if ((SDL_GetTicks() - fps->last_time) < (1000 / FRAME_PER_SECOND)) {
+		SDL_Delay(1000 / FRAME_PER_SECOND - (SDL_GetTicks() - fps->last_time));
+	}
+
+	fps->last_time = SDL_GetTicks();
+
+	if (SDL_UpdateWindowSurface(sdl->Window) < 0) {
+		printf("%s\n", SDL_GetError());
+		//goto the_end;
+	}
+
+	Frame++;
+}
+
+// Doesn't currently end execution...
 void Clean_Up(void)
 {
-	fclose(AscPic);
+	/*fclose(AscPic);
 	Mix_FreeMusic(bgm);
 	SDL_FreeSurface(Point);
 	SDL_FreeSurface(AscFace);
@@ -132,36 +121,134 @@ void Clean_Up(void)
 	Mix_CloseAudio();
 	Mix_Quit();
 	SDL_Quit();
-	TTF_Quit();
+	TTF_Quit();*/
 }
 
-void Print_Ascii(void)
+void file_to_surface(SDL *sdl, TTF_Font *font, FILE *video)
 {
-	int count = 0, temp;
-	while (count < 60)
-	{
-		if (fgets(Ascch, 199, AscPic) == NULL)
-		{
+	int count = 0;
+	int temp;
+
+	char buffer[200] = "aaa";
+
+	while (count < 60) {
+		if (fgets(buffer, 199, video) == NULL) {
 			SDL_Delay(5000);
-			Clean_Up();
-			exit(0);
+			//goto the_end;
 		}
-		Ascch[160] = '\0';
-		AscFace = TTF_RenderText_Solid(Font, Ascch, Fontcolor);
-		if (AscFace == NULL)
+
+		buffer[160] = '\0';
+
+		sdl->video = TTF_RenderText_Solid(font, buffer, sdl->FontColor);
+		if (sdl->video == NULL){
+			printf("%s\n", SDL_GetError());
+			//goto the_end;
+		}
+
+		CopyToSurface(0, count * sdl->video->h, sdl->video, sdl->Surface, NULL);
+		SDL_FreeSurface(sdl->video);
+
+		count++;
+	}
+
+    // Why?
+	temp = fgetc(video);
+	temp = fgetc(video);
+	if (temp == EOF) {
+		SDL_Delay(5000);
+		//goto the_end;
+	}
+}
+
+void SetTextColor(unsigned short r, unsigned short g, unsigned short b)
+{
+	//Fontcolor.r = r;
+	//Fontcolor.g = g;
+	//Fontcolor.b = b;
+}
+
+void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_Rect *cli)
+{
+	SDL_Rect location;
+	location.x = x;
+	location.y = y;
+	SDL_BlitSurface(source, cli, target, &location);
+}
+
+void Set_ScreenColor(SDL_Surface *surface, uint16_t r, uint16_t g, uint16_t b)
+{
+	SDL_FillRect(surface, &(surface->clip_rect), SDL_MapRGB(surface->format, r, g, b));
+}
+
+/*打印FPS帧率*/
+/*void PrintFPS(void)
+{
+	char fpsch[10] = "FPS:";
+	char temp[4];
+	int temptime;
+	if (Updatefps.last_time == 0)
+	{
+		Updatefps.last_time = SDL_GetTicks();
+		return;
+	}
+	temptime = SDL_GetTicks();
+	Updatefps.time += temptime - Updatefps.last_time;
+	Updatefps.last_time = temptime;
+	if (Updatefps.time >= 1000)
+	{
+		Updatefps.time = 0;
+		itoa(Frame, temp, 10);
+		strcat(fpsch, temp);
+		FpsCount = TTF_RenderText_Solid(FPSFont, fpsch, Fontcolor);
+		if (FpsCount == NULL)
 		{
 			Error(ERROR_PRINTTEXT);
 		}
-		CopyToSurface(0, count * AscFace->h, AscFace, Screen, NULL);
-		SDL_FreeSurface(AscFace);
-		count++;
+		Frame = 0;
 	}
-	temp = fgetc(AscPic);
-	temp = fgetc(AscPic);
-	if (temp == EOF)
+	if (FpsCount == NULL)
 	{
-		SDL_Delay(5000);
-		Clean_Up();
-		exit(0);
+		FpsCount = TTF_RenderText_Solid(FPSFont, "FPS:0", Fontcolor);
+		if (FpsCount == NULL)
+		{
+			Error(ERROR_PRINTTEXT);
+		}
 	}
+	CopyToSurface(WIDTH - FpsCount->w, 0, FpsCount, Screen, NULL);
+}*/
+
+char *itoa(int num, char *str, int radix)
+{
+	char index[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	uint32_t unum;
+
+	int i = 0, j, k;
+
+	if (radix == 10 && num < 0) {
+		unum = (uint32_t)-num;
+		str[i++] = '-';
+	} else {
+		unum = (uint32_t)num;
+	}
+
+	do {
+		str[i++] = index[unum % (uint32_t)radix];
+		unum /= radix;
+	} while (unum);
+
+	str[i] = '\0';
+
+	if (str[0] == '-') {
+		k = 1;
+	} else {
+		k = 0;
+	}
+
+	for (j = k; j < (i - 1) / 2.0 + k; j++) {
+		num = str[j];
+		str[j] = str[i - j - 1 + k];
+		str[i - j - 1 + k] = num;
+	}
+
+	return str;
 }
