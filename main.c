@@ -13,8 +13,8 @@ int main(void)
 	XVideoSetMode(WIDTH, HEIGHT, BPP, REFRESH_DEFAULT);
 #endif
 
+	// NXDK never returns from init_backends
 	init_backends(sdl, ttf, mix, fps);
-
 	init_files(ttf, mix, &video);
 
 	while (1) {
@@ -23,7 +23,6 @@ int main(void)
 			SDL_MapRGB(sdl->Surface->format, 0x3F, 0x3F, 0x3F));
 
 		file_to_surface(sdl, ttf->Font, &video);
-
 		PrintFPS(sdl, ttf->Font);
 
 		update_screen(sdl, fps);
@@ -49,6 +48,7 @@ void init_backends(SDL *sdl, TTF *ttf, MIX *mix, Timer *fps)
 
 	sdl->Window = SDL_CreateWindow("Bad Apple!!", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, 0);
 	sdl->Surface = SDL_GetWindowSurface(sdl->Window);
+
 	if (sdl->Surface == NULL) {
 		//printf("%s\n", SDL_GetError());
 		//goto the_end;

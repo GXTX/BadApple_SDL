@@ -14,7 +14,7 @@ An "Bad Apple!!"Anime based SDL lib
 Linux下使用cmake编译
 
 ```
-    gcc main.c function.c -lSDL2 -lSDL2_mixer -lSDL2_ttf
+    gcc main.c function.c -lSDL2 -lSDL2_mixer -lSDL2_ttf -Wall -Wextra -pedantic
 ```
 
 

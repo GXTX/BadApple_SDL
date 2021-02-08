@@ -6,6 +6,6 @@ SRCS = $(CURDIR)/main.c
 NXDK_DIR = ../nxdk
 NXDK_SDL = y
 
-CFLAGS += -O2
+CFLAGS += -O2 -Wall -Wextra -pedantic
 
 include $(NXDK_DIR)/Makefile
