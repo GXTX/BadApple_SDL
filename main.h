@@ -1,27 +1,26 @@
 #ifdef NXDK
-#include <SDL.h>
-#include <SDL_ttf.h>
-#include <SDL_mixer.h>
-#include <hal/debug.h>
-#include <hal/video.h>
+    #include <SDL.h>
+    #include <SDL_ttf.h>
+    #include <SDL_mixer.h>
+    #include <hal/debug.h>
+    #include <hal/video.h>
 #else
-#include "SDL2/SDL.h"
-#include "SDL2/SDL_ttf.h"
-#include "SDL2/SDL_mixer.h"
+    #include "SDL2/SDL.h"
+    #include "SDL2/SDL_ttf.h"
+    #include "SDL2/SDL_mixer.h"
 #endif
 
 #include <errno.h>
 #include <stdlib.h>
 
 #ifdef NXDK
-#define WIDTH 720
-#define HEIGHT 480
+    #define WIDTH 720
+    #define HEIGHT 480
 #else
-#define WIDTH 800
-#define HEIGHT 640
+    #define WIDTH 800
+    #define HEIGHT 640
 #endif
 
-#define BPP 32
 #define FRAME_PER_SECOND 30
 
 #ifdef NXDK
@@ -40,14 +39,12 @@ typedef struct Timer {
 } Timer;
 
 typedef struct SDL{
-    SDL_Window  *Window;
-    SDL_Surface *Surface;
-    SDL_Surface *FpsCount;
-    SDL_Event    Event;
-    SDL_Color    FontColor;
-    SDL_Surface *Point;     // ??
-    SDL_Surface *PrintText; // ??
-    SDL_Surface *video;   // ??
+    SDL_Window   *Window;
+    SDL_Surface  *Surface;
+    SDL_Surface  *FpsCount;
+    SDL_Event     Event;
+    SDL_Color     FontColor;
+    SDL_Surface  *video;   // ??
 } SDL;
 
 typedef struct TTF{

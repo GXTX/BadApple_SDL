@@ -42,6 +42,9 @@ int main(void)
 		goto the_end;
 	}
 
+	//SDL_FillRect(sdl->Surface, &(sdl->Surface->clip_rect), 
+	//	SDL_MapRGB(sdl->Surface->format, 0x3F, 0x3F, 0x3F));
+
 	while (1) {
 		// Clear the screen
 		SDL_FillRect(sdl->Surface, &(sdl->Surface->clip_rect), 
