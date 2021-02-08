@@ -53,9 +53,8 @@ TTF_Font *Default_Font;
 int main(void)
 {
 #ifdef NXDK
-	XVideoSetMode(720, 480, BPP, REFRESH_DEFAULT);
+	XVideoSetMode(WIDTH, HEIGHT, BPP, REFRESH_DEFAULT);
 #endif
-
 	/*变量*/
 	bool quit = false;
 	/*加载环境*/
@@ -71,10 +70,18 @@ int main(void)
 	Print_Ascii();
 	Flip_Screen();
 	/*播放音乐*/
+	Mix_VolumeMusic(MIX_MAX_VOLUME);
 	if (Mix_PlayMusic(bgm, 1) < 0)
 	{
 		return 1;
 	}
+#ifdef NXDK
+// this is really bad, not sure why this is happening but audio will only play
+// when we set both PlayMusic and PlayChannel with a WAV chunk
+// nxdk bug?
+	Mix_Chunk *test = Mix_LoadWAV("D:\\resource\\Badapple.wav");
+	Mix_PlayChannel(-1, test, 1);
+#endif
 	/*保持屏幕存在*/
 	while (quit == false)
 	{
@@ -82,7 +89,7 @@ int main(void)
 		Print_Ascii();
 		PrintFPS();
 		Flip_Screen();
-	play:
+
 		while (SDL_PollEvent(&Event))
 		{
 			if (Event.type == SDL_QUIT)
@@ -102,7 +109,7 @@ void Load_File(void)
 	Font = TTF_OpenFont("D:\\resource\\consola.ttf", 9);
 	FPSFont = TTF_OpenFont("D:\\resource\\consola.ttf", 20);
 	AscPic = fopen("D:\\resource\\AscPic.txt", "r");
-	bgm = Load_Music("D:\\resource\\Badapple.mp3");
+	bgm = Load_Music("D:\\resource\\Badapple.ogg");
 #else
 	Font = TTF_OpenFont("resource/consola.ttf", 9);
 	FPSFont = TTF_OpenFont("resource/consola.ttf", 20);

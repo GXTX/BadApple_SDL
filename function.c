@@ -81,28 +81,31 @@ void Error(int errorcode)
 /*初始化*/
 void Init(void)
 {
-	/*窗口位置居中*/
-	putenv("SDL_VIDEO_WINDOW_POS");
-	putenv("SDL_VIDEO_CENTERED=1");
 	/*初始化SDL所有子系统*/
-	if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+	if (SDL_Init((SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS)) < 0)
 	{
+		#ifdef NXDK
+		debugPrint("%s\n", SDL_GetError());
+		#endif
 		Error(ERROR_INIT_SDL);
 	}
+
 	/*初始化字体系统*/
 	if (TTF_Init() < 0)
 	{
 		Error(ERROR_INIT_FONTLIB);
 	}
+
 	/*初始化声音系统*/
 	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) < 0)
 	{
 		Error(ERROR_INIT_MIXLIB);
 	}
-	if (Mix_Init(MIX_INIT_MP3) < 0)
+	if (Mix_Init(MIX_INIT_OGG) < 0)
 	{
 		Error(ERROR_INIT_MIXLIB);
 	}
+
 	/*初始化屏幕表面*/
 	Window = SDL_CreateWindow("Bad Apple!!", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, 0);
 	Screen = SDL_GetWindowSurface(Window);
@@ -110,6 +113,7 @@ void Init(void)
 	{
 		exit(ERROR_INIT_SDL);
 	}
+
 	/*启动计时器*/
 	Fps.last_time = SDL_GetTicks();
 }
