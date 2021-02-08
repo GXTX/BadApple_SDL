@@ -24,10 +24,6 @@
 #define BPP 32
 #define FRAME_PER_SECOND 30
 
-static const char *font  = "resource/consola.ttf";
-static const char *music = "resource/Badapple.mp3";
-static const char *video_file = "resource/AscPic.txt";
-
 typedef struct Location {
 	int x;
 	int y;
@@ -66,17 +62,17 @@ Timer Updatefps;
 // Why global?
 int Frame = 0;
 
-void init_files(TTF *ttf, MIX *mix, FILE *video);
+void init_files(TTF *ttf, MIX *mix, FILE **video);
 void init_backends(SDL *sdl, TTF *ttf, MIX *mix, Timer *fps);
 void update_screen(SDL *sdl, Timer *fps);
-void file_to_surface(SDL *sdl, TTF_Font *font, FILE *video);
+void file_to_surface(SDL *sdl, TTF_Font *font, FILE **video);
 
-void Set_ScreenColor(SDL_Surface *surface, uint16_t r, uint16_t g, uint16_t b);
+void PrintFPS(SDL *sdl, TTF_Font *font);
+
+//void Set_ScreenColor(SDL_Surface *surface, uint16_t r, uint16_t g, uint16_t b);
 
 char *itoa(int num, char *str, int radix);
 void Init(void);
 void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_Rect *cli);
 void SetTextColor(unsigned short r, unsigned short g, unsigned short b);
-void PrintFPS(void);
-void Clean_Up(void);
 void Load_File(void);

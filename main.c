@@ -16,45 +16,28 @@ int main(void)
 
 	init_backends(sdl, ttf, mix, fps);
 
-	// Do we really need to do this?
-	//SDL_FillRect(sdl->Surface, &(sdl->Surface->clip_rect), 
-	//	SDL_MapRGB(sdl->Surface->format, 0x3F, 0x3F, 0x3F));
-	//Set_ScreenColor(sdl->Surface, 0x3F, 0x3F, 0x3F);
-
-	// Do we really need to do this?
-	//sdl->FontColor = {0xFF, 0xFF, 0xFF, 0xFF};
-	//SetTextColor(0xFF, 0xFF, 0xFF);
-
-	init_files(ttf, mix, video);
-
-	/*刷新屏幕*/
-	// copy file buffer to sdl->Surface
-	//file_to_surface(sdl, ttf->Font, video);
-
-	// Required?
-	//Set_ScreenColor(0x3F, 0x3F, 0x3F);
-
-	// Why are we ignoring the first 2 sets of "frames"?
-	//file_to_surface(sdl, ttf->Font, video);
-
-	// Why?
-	update_screen(sdl, fps);
+	init_files(ttf, mix, &video);
 
 	while (1) {
-		//Set_ScreenColor(0x3F, 0x3F, 0x3F);
-		//file_to_surface(sdl, ttf->Font, video);
+		// Clear the screen
+		SDL_FillRect(sdl->Surface, &(sdl->Surface->clip_rect), 
+			SDL_MapRGB(sdl->Surface->format, 0x3F, 0x3F, 0x3F));
+
+		file_to_surface(sdl, ttf->Font, &video);
+
+		PrintFPS(sdl, ttf->Font);
 		//PrintFPS();
 		update_screen(sdl, fps);
 
 		while (SDL_PollEvent(&sdl->Event)) {
 			if (sdl->Event.type == SDL_QUIT) {
-				//goto the_end;
+				goto the_end;
 			}
 		}
 	}
 
 the_end:
-	Clean_Up();
+	//Clean_Up();
 	return 0;
 }
 
@@ -80,13 +63,17 @@ void init_backends(SDL *sdl, TTF *ttf, MIX *mix, Timer *fps)
 	fps->last_time = SDL_GetTicks();
 }
 
-void init_files(TTF *ttf, MIX *mix, FILE *video)
+void init_files(TTF *ttf, MIX *mix, FILE **video)
 {
+	static const char *font  = "resource/consola.ttf";
+	static const char *music = "resource/Badapple.mp3";
+	static const char *video_file = "resource/AscPic.txt";
+
 	ttf->Font = TTF_OpenFont(font, 9);
 	ttf->FpsFont = TTF_OpenFont(font, 20);
 
-	video = fopen(video_file, "r");
-	if (video == NULL) {
+	*video = fopen(video_file, "r");
+	if (*video == NULL) {
 		printf("Unable to open file: 0x%X\n", errno);
 		//goto the_end;
 	}
@@ -110,29 +97,15 @@ void update_screen(SDL *sdl, Timer *fps)
 	Frame++;
 }
 
-// Doesn't currently end execution...
-void Clean_Up(void)
-{
-	/*fclose(AscPic);
-	Mix_FreeMusic(bgm);
-	SDL_FreeSurface(Point);
-	SDL_FreeSurface(AscFace);
-	TTF_CloseFont(Font);
-	Mix_CloseAudio();
-	Mix_Quit();
-	SDL_Quit();
-	TTF_Quit();*/
-}
-
-void file_to_surface(SDL *sdl, TTF_Font *font, FILE *video)
+void file_to_surface(SDL *sdl, TTF_Font *font, FILE **video)
 {
 	int count = 0;
 	int temp;
 
-	char buffer[200] = "aaa";
+	char buffer[200] = "ddd";
 
 	while (count < 60) {
-		if (fgets(buffer, 199, video) == NULL) {
+		if (fgets(buffer, 199, *video) == NULL) {
 			SDL_Delay(5000);
 			//goto the_end;
 		}
@@ -152,70 +125,57 @@ void file_to_surface(SDL *sdl, TTF_Font *font, FILE *video)
 	}
 
     // Why?
-	temp = fgetc(video);
-	temp = fgetc(video);
+	temp = fgetc(*video);
+	temp = fgetc(*video);
 	if (temp == EOF) {
 		SDL_Delay(5000);
 		//goto the_end;
 	}
 }
 
-void SetTextColor(unsigned short r, unsigned short g, unsigned short b)
-{
-	//Fontcolor.r = r;
-	//Fontcolor.g = g;
-	//Fontcolor.b = b;
-}
-
 void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_Rect *cli)
 {
-	SDL_Rect location;
-	location.x = x;
-	location.y = y;
+	SDL_Rect location = {x, y, 0, 0};
+	//location.x = x;
+	//location.y = y;
 	SDL_BlitSurface(source, cli, target, &location);
 }
 
-void Set_ScreenColor(SDL_Surface *surface, uint16_t r, uint16_t g, uint16_t b)
-{
-	SDL_FillRect(surface, &(surface->clip_rect), SDL_MapRGB(surface->format, r, g, b));
-}
-
-/*打印FPS帧率*/
-/*void PrintFPS(void)
+void PrintFPS(SDL *sdl, TTF_Font *font)
 {
 	char fpsch[10] = "FPS:";
 	char temp[4];
 	int temptime;
-	if (Updatefps.last_time == 0)
-	{
+
+	if (Updatefps.last_time == 0) {
 		Updatefps.last_time = SDL_GetTicks();
 		return;
 	}
+
 	temptime = SDL_GetTicks();
 	Updatefps.time += temptime - Updatefps.last_time;
 	Updatefps.last_time = temptime;
-	if (Updatefps.time >= 1000)
-	{
+
+	if (Updatefps.time >= 1000) {
 		Updatefps.time = 0;
 		itoa(Frame, temp, 10);
 		strcat(fpsch, temp);
-		FpsCount = TTF_RenderText_Solid(FPSFont, fpsch, Fontcolor);
-		if (FpsCount == NULL)
-		{
-			Error(ERROR_PRINTTEXT);
+		sdl->FpsCount = TTF_RenderText_Solid(font, fpsch, sdl->FontColor);
+		if (sdl->FpsCount == NULL) {
+			//Error(ERROR_PRINTTEXT);
 		}
 		Frame = 0;
 	}
-	if (FpsCount == NULL)
-	{
-		FpsCount = TTF_RenderText_Solid(FPSFont, "FPS:0", Fontcolor);
-		if (FpsCount == NULL)
-		{
-			Error(ERROR_PRINTTEXT);
+
+	if (sdl->FpsCount == NULL) {
+		sdl->FpsCount = TTF_RenderText_Solid(font, "FPS:0", sdl->FontColor);
+		if (sdl->FpsCount == NULL) {
+			//Error(ERROR_PRINTTEXT);
 		}
 	}
-	CopyToSurface(WIDTH - FpsCount->w, 0, FpsCount, Screen, NULL);
-}*/
+
+	CopyToSurface(WIDTH - sdl->FpsCount->w, 0, sdl->FpsCount, sdl->Surface, NULL);
+}
 
 char *itoa(int num, char *str, int radix)
 {
