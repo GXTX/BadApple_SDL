@@ -1,10 +1,10 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #ifndef WIDTH
-  #define WIDTH 920
-  #define HEIGHT 720
-  #define BPP 32
-  #define FRAME_PER_SECOND 30
+#define WIDTH 920
+#define HEIGHT 720
+#define BPP 32
+#define FRAME_PER_SECOND 30
 #endif
 typedef struct Location
 {
