@@ -1,7 +1,7 @@
 /*头文件声明*/
-#include "SDL/SDL.h"
-#include "SDL/SDL_ttf.h"
-#include "SDL/SDL_mixer.h"
+#include "SDL2/SDL.h"
+#include "SDL2/SDL_ttf.h"
+#include "SDL2/SDL_mixer.h"
 #include "common.h"
 #include "error.h"
 
@@ -24,6 +24,7 @@ void Load_File(void);
 void Print_Ascii(void);
 
 /*全局变量声明*/
+extern SDL_Window *Window;
 extern SDL_Surface *Screen; //屏幕表面
 extern SDL_Surface *Point;
 extern SDL_Event Event; //事件类型
@@ -85,10 +86,10 @@ int main(int argv, char *args[])
 
 void Load_File(void)
 {
-	Font = TTF_OpenFont("consola.ttf", 9);
-	FPSFont = TTF_OpenFont("consola.ttf", 20);
-	AscPic = fopen("AscPic.txt", "r");
-	bgm = Load_Music("Badapple.mp3");
+	Font = TTF_OpenFont("resource/consola.ttf", 9);
+	FPSFont = TTF_OpenFont("resource/consola.ttf", 20);
+	AscPic = fopen("resource/AscPic.txt", "r");
+	bgm = Load_Music("resource/Badapple.mp3");
 	if (AscPic == NULL)
 	{
 		Error(0x9F);

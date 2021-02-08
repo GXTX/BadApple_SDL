@@ -3,12 +3,13 @@ This function lib edit by KosWu.
 KosWu's Blog: blog.koswu.com
 */
 /*头文件声明*/
-#include "SDL/SDL.h"
-#include "SDL/SDL_ttf.h"
-#include "SDL/SDL_mixer.h"
+#include "SDL2/SDL.h"
+#include "SDL2/SDL_ttf.h"
+#include "SDL2/SDL_mixer.h"
 #include "common.h"
 #include "error.h"
 /*全局变量*/
+SDL_Window  *Window;
 SDL_Surface *Screen = NULL; //屏幕表面
 SDL_Surface *FpsCount;
 SDL_Event Event; //事件类型
@@ -60,7 +61,7 @@ void Error(int errorcode)
 	error = Print_Text(errormessage);
 	CopyToSurface((WIDTH - error->w) / 2, (HEIGHT - error->h) / 2 + error->h + 20, error, Screen, NULL);
 	SDL_FreeSurface(error);
-	if (SDL_Flip(Screen) < 0)
+	if (SDL_UpdateWindowSurface(Window) < 0)
 	{
 		Error(ERROR_FLIPSCREEN);
 	}
@@ -95,13 +96,12 @@ void Init(void)
 		Error(ERROR_INIT_MIXLIB);
 	}
 	/*初始化屏幕表面*/
-	Screen = SDL_SetVideoMode(WIDTH, HEIGHT, BPP, SDL_HWSURFACE | SDL_DOUBLEBUF);
+	Window = SDL_CreateWindow("Bad Apple!!", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, 0);
+	Screen = SDL_GetWindowSurface(Window);
 	if (Screen == NULL)
 	{
 		exit(ERROR_INIT_SDL);
 	}
-	/*设置标题*/
-	SDL_WM_SetCaption("Bad Apple!!", NULL);
 	/*启动计时器*/
 	Fps.last_time = SDL_GetTicks();
 }
@@ -155,7 +155,7 @@ void Flip_Screen(void)
 		SDL_Delay(1000 / FRAME_PER_SECOND - (SDL_GetTicks() - Fps.last_time));
 	}
 	Fps.last_time = SDL_GetTicks();
-	if (SDL_Flip(Screen) < 0)
+	if (SDL_UpdateWindowSurface(Window) < 0)
 	{
 		Error(ERROR_FLIPSCREEN);
 	}
