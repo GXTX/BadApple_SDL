@@ -1,6 +1,5 @@
 /*头文件声明*/
 #include "SDL/SDL.h"
-#include "SDL/SDL_image.h"
 #include "SDL/SDL_ttf.h"
 #include "SDL/SDL_mixer.h"
 #include "common.h"
@@ -10,15 +9,11 @@
 void Load_File(void);
 /*外部函数声明*/
 extern void Init(void);																			  //初始化SDL
-extern SDL_Surface *Load_Image(const char path[]);												  //优化加载图片
 extern void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_Rect *cli); //复制表面
 extern void Error(int errorcode);																  //错误报告
 extern SDL_Surface *Print_Text(char *text);														  //渲染文字
 extern void SetTextColor(unsigned short r, unsigned short g, unsigned short b);					  //设置字体颜色
 extern Mix_Music *Load_Music(const char *path);													  //加载音乐
-extern void GetMouseLocation(void);																  //加载鼠标位置
-extern Mix_Chunk *Load_Chunk(const char *path);													  //加载音效
-extern void PrintMouse(void);																	  //打印鼠标位置
 extern void Flip_Screen(void);																	  //刷新屏幕
 extern void Set_ScreenColor(unsigned short r, unsigned short g, unsigned short b);				  //设置背景色
 extern void PrintFPS(void);																		  //打印FPS
@@ -32,7 +27,6 @@ void Print_Ascii(void);
 extern SDL_Surface *Screen; //屏幕表面
 extern SDL_Surface *Point;
 extern SDL_Event Event; //事件类型
-extern Location Mouse;
 extern SDL_Color Fontcolor;
 extern TTF_Font *Font;
 extern Timer Fps;
@@ -51,7 +45,6 @@ int main(int argv, char *args[])
 {
 	/*变量*/
 	bool quit = false;
-	//SDL_Surface *message=NULL;
 	/*加载环境*/
 	Init();
 	/*加载背景颜色*/
@@ -75,40 +68,10 @@ int main(int argv, char *args[])
 		Set_ScreenColor(0x3F, 0x3F, 0x3F);
 		Print_Ascii();
 		PrintFPS();
-		//GetMouseLocation();
-		//PrintMouse();
 		Flip_Screen();
 	play:
 		while (SDL_PollEvent(&Event))
 		{
-			if (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_SPACE)
-			{
-				if (Mix_PausedMusic() != 1)
-				{
-					Mix_PauseMusic();
-					Set_ScreenColor(0x3F, 0x3F, 0x3F);
-					Flip_Screen();
-					while (quit == false)
-					{
-						while (SDL_PollEvent(&Event))
-						{
-							if (Event.type == SDL_KEYDOWN && Event.key.keysym.sym == SDLK_SPACE)
-							{
-								Mix_ResumeMusic();
-								goto play;
-							}
-							if (Event.type == SDL_QUIT)
-							{
-								quit = true;
-							}
-						}
-						if (Mix_PausedMusic() != 1)
-						{
-							break;
-						}
-					}
-				}
-			}
 			if (Event.type == SDL_QUIT)
 			{
 				quit = true;
@@ -119,6 +82,7 @@ int main(int argv, char *args[])
 	Clean_Up();
 	return 0;
 }
+
 void Load_File(void)
 {
 	Font = TTF_OpenFont("consola.ttf", 9);
@@ -130,6 +94,7 @@ void Load_File(void)
 		Error(0x9F);
 	}
 }
+
 void Clean_Up(void)
 {
 	fclose(AscPic);
@@ -142,6 +107,7 @@ void Clean_Up(void)
 	SDL_Quit();
 	TTF_Quit();
 }
+
 void Print_Ascii(void)
 {
 	int count = 0, temp;

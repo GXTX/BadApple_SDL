@@ -4,7 +4,6 @@ KosWu's Blog: blog.koswu.com
 */
 /*头文件声明*/
 #include "SDL/SDL.h"
-#include "SDL/SDL_image.h"
 #include "SDL/SDL_ttf.h"
 #include "SDL/SDL_mixer.h"
 #include "common.h"
@@ -13,7 +12,6 @@ KosWu's Blog: blog.koswu.com
 SDL_Surface *Screen = NULL; //屏幕表面
 SDL_Surface *FpsCount;
 SDL_Event Event; //事件类型
-Location Mouse;	 //鼠标位置
 SDL_Color Fontcolor;
 TTF_Font *Font;
 SDL_Surface *Point;
@@ -31,8 +29,6 @@ void Error(int errorcode);
 SDL_Surface *Print_Text(char *text);
 void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_Rect *cli);
 void SetTextColor(unsigned short r, unsigned short g, unsigned short b);
-void PrintMouse(void);
-void GetMouseLocation(void);
 void Flip_Screen(void);
 void Set_ScreenColor(unsigned short r, unsigned short g, unsigned short b);
 void PrintFPS(void);
@@ -110,21 +106,6 @@ void Init(void)
 	Fps.last_time = SDL_GetTicks();
 }
 
-/*优化加载图片*/
-SDL_Surface *Load_Image(char path[])
-{
-	SDL_Surface *oldimage = NULL;
-	SDL_Surface *newimage = NULL;
-	oldimage = IMG_Load(path);
-	if (oldimage == NULL)
-	{
-		exit(ERROR_LOADIMG);
-	}
-	newimage = SDL_DisplayFormat(oldimage);
-	SDL_FreeSurface(oldimage);
-	return newimage;
-}
-
 /*渲染文字*/
 SDL_Surface *Print_Text(char *text)
 {
@@ -144,6 +125,7 @@ void SetTextColor(unsigned short r, unsigned short g, unsigned short b)
 	Fontcolor.g = g;
 	Fontcolor.b = b;
 }
+
 /*拷贝至表面*/
 void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_Rect *cli)
 {
@@ -152,6 +134,7 @@ void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_R
 	location.y = y;
 	SDL_BlitSurface(source, cli, target, &location);
 }
+
 /*加载音乐*/
 Mix_Music *Load_Music(char *path)
 {
@@ -163,30 +146,7 @@ Mix_Music *Load_Music(char *path)
 	}
 	return music;
 }
-/*加载音效*/
-Mix_Chunk *Load_Chunk(char *path)
-{
-	Mix_Chunk *chunk = NULL;
-	chunk = Mix_LoadWAV(path);
-	if (path == NULL)
-	{
-		Error(ERROR_LOADCHUNK);
-	}
-	return chunk;
-}
-/*获取指针位置*/
-void GetMouseLocation(void)
-{
-	SDL_GetMouseState(&(Mouse.x), &(Mouse.y));
-}
-/*打印鼠标指针*/
-void PrintMouse(void)
-{
-	/*加载鼠标指针并设置关键色*/
-	Uint32 colorkey = SDL_MapRGB(Point->format, 0, 0, 0);
-	SDL_SetColorKey(Point, SDL_SRCCOLORKEY, colorkey);
-	CopyToSurface(Mouse.x, Mouse.y, Point, Screen, NULL);
-}
+
 /*刷新屏幕*/
 void Flip_Screen(void)
 {
@@ -201,10 +161,12 @@ void Flip_Screen(void)
 	}
 	Frame++;
 }
+
 void Set_ScreenColor(unsigned short r, unsigned short g, unsigned short b) //设置背景色
 {
 	SDL_FillRect(Screen, &(Screen->clip_rect), SDL_MapRGB(Screen->format, r, g, b));
 }
+
 /*打印FPS帧率*/
 void PrintFPS(void)
 {
