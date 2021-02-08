@@ -9,16 +9,12 @@ An "Bad Apple!!"Anime based SDL lib
 首先在common.h中的修改适合的长宽和字符大小
 
 安装依赖库
->SDL SDL_mixer SDL_ttf SDL_image
+>SDL2 SDL2_mixer SDL2_ttf
 
 Linux下使用cmake编译
 
 ```
-    mkdir build
-    cd build
-    cmake ../
-    make
-    ./badapple
+    gcc main.c function.c -lSDL2 -lSDL2_mixer -lSDL2_ttf
 ```
 
 
