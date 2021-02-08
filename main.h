@@ -24,15 +24,19 @@
 #define BPP 32
 #define FRAME_PER_SECOND 30
 
-typedef struct Location {
-	int x;
-	int y;
-} Location;
+#ifdef NXDK
+	static const char *font  = "D:\\resource\\consola.ttf";
+	//static const char *music = "D:\\resource\\Badapple.ogg";
+	static const char *video_file = "D:\\resource\\AscPic.txt";
+#else
+	static const char *font  = "resource/consola.ttf";
+	//static const char *music = "resource/Badapple.mp3";
+	static const char *video_file = "resource/AscPic.txt";
+#endif
 
 typedef struct Timer {
-	int last_time;
+	uint32_t last_time;
 	int time;
-	//bool running;
 } Timer;
 
 typedef struct SDL{
@@ -62,8 +66,6 @@ Timer Updatefps;
 // Why global?
 int Frame = 0;
 
-void init_files(TTF *ttf, MIX *mix, FILE **video);
-void init_backends(SDL *sdl, TTF *ttf, MIX *mix, Timer *fps);
 void update_screen(SDL *sdl, Timer *fps);
 void file_to_surface(SDL *sdl, TTF_Font *font, FILE **video);
 void PrintFPS(SDL *sdl, TTF_Font *font);

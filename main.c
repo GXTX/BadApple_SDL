@@ -4,18 +4,43 @@ int main(void)
 {
 	SDL *sdl = malloc(sizeof(SDL));
 	TTF *ttf = malloc(sizeof(TTF));
-	MIX *mix = malloc(sizeof(MIX));
+	//MIX *mix = malloc(sizeof(MIX));
 
-	Timer *fps;
+	Timer fps = {0, 0};
 	FILE *video;
 
 #ifdef NXDK
 	XVideoSetMode(WIDTH, HEIGHT, BPP, REFRESH_DEFAULT);
 #endif
 
-	// NXDK never returns from init_backends
-	init_backends(sdl, ttf, mix, fps);
-	init_files(ttf, mix, &video);
+	if (SDL_Init((SDL_INIT_VIDEO | SDL_INIT_EVENTS)) < 0) {
+		//printf("%s\n", SDL_GetError());
+		goto the_end;
+	}
+
+	sdl->Window = SDL_CreateWindow("Bad Apple!!", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, 0);
+	sdl->Surface = SDL_GetWindowSurface(sdl->Window);
+
+	if (sdl->Surface == NULL) {
+		//printf("%s\n", SDL_GetError());
+		goto the_end;
+	}
+
+	if (TTF_Init() < 0) {
+		//printf("%s\n", TTF_GetError());
+		goto the_end;
+	}
+
+	fps.last_time = SDL_GetTicks();
+
+	ttf->Font = TTF_OpenFont(font, 9);
+	ttf->FpsFont = TTF_OpenFont(font, 20);
+
+	video = fopen(video_file, "r");
+	if (video == NULL) {
+		//printf("Unable to open file: 0x%X\n", errno);
+		goto the_end;
+	}
 
 	while (1) {
 		// Clear the screen
@@ -25,7 +50,7 @@ int main(void)
 		file_to_surface(sdl, ttf->Font, &video);
 		PrintFPS(sdl, ttf->Font);
 
-		update_screen(sdl, fps);
+		update_screen(sdl, &fps);
 
 		while (SDL_PollEvent(&sdl->Event)) {
 			if (sdl->Event.type == SDL_QUIT) {
@@ -37,53 +62,6 @@ int main(void)
 the_end:
 	//Clean_Up();
 	return 0;
-}
-
-void init_backends(SDL *sdl, TTF *ttf, MIX *mix, Timer *fps)
-{
-	if (SDL_Init((SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS)) < 0) {
-		//printf("%s\n", SDL_GetError());
-		//goto the_end;
-	}
-
-	sdl->Window = SDL_CreateWindow("Bad Apple!!", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, 0);
-	sdl->Surface = SDL_GetWindowSurface(sdl->Window);
-
-	if (sdl->Surface == NULL) {
-		//printf("%s\n", SDL_GetError());
-		//goto the_end;
-	}
-
-	if (TTF_Init() < 0) {
-		//printf("%s\n", TTF_GetError());
-		//goto the_end;
-	}
-
-	fps->last_time = SDL_GetTicks();
-}
-
-void init_files(TTF *ttf, MIX *mix, FILE **video)
-{
-#ifdef NXDK
-	static const char *font  = "D:\\resource\\consola.ttf";
-	static const char *music = "D:\\resource\\Badapple.ogg";
-	static const char *video_file = "D:\\resource\\AscPic.txt";
-#else
-	static const char *font  = "resource/consola.ttf";
-	static const char *music = "resource/Badapple.mp3";
-	static const char *video_file = "resource/AscPic.txt";
-#endif
-
-	ttf->Font = TTF_OpenFont(font, 9);
-	ttf->FpsFont = TTF_OpenFont(font, 20);
-
-	*video = fopen(video_file, "r");
-	if (*video == NULL) {
-		//printf("Unable to open file: 0x%X\n", errno);
-		//goto the_end;
-	}
-
-	//bgm = Load_Music("resource/Badapple.mp3");
 }
 
 void update_screen(SDL *sdl, Timer *fps)
