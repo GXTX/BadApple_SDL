@@ -1,0 +1,9 @@
+XBE_TITLE = BadApple
+GEN_XISO  = $(XBE_TITLE).iso
+
+SRCS = $(CURDIR)/main.c $(CURDIR)/function.c
+
+NXDK_DIR = ../../Projects/nxdk
+NXDK_SDL = y
+
+include $(NXDK_DIR)/Makefile

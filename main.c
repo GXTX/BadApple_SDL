@@ -1,7 +1,15 @@
 /*头文件声明*/
+#ifdef NXDK
+#include <SDL.h>
+#include <SDL_ttf.h>
+#include <SDL_mixer.h>
+#include <hal/debug.h>
+#include <hal/video.h>
+#else
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_ttf.h"
 #include "SDL2/SDL_mixer.h"
+#endif
 #include "common.h"
 #include "error.h"
 
@@ -42,8 +50,12 @@ Mix_Music *bgm;
 TTF_Font *Default_Font;
 
 /*主函数*/
-int main(int argv, char *args[])
+int main(void)
 {
+#ifdef NXDK
+	XVideoSetMode(720, 480, BPP, REFRESH_DEFAULT);
+#endif
+
 	/*变量*/
 	bool quit = false;
 	/*加载环境*/
@@ -86,10 +98,17 @@ int main(int argv, char *args[])
 
 void Load_File(void)
 {
+#ifdef NXDK
+	Font = TTF_OpenFont("D:\\resource\\consola.ttf", 9);
+	FPSFont = TTF_OpenFont("D:\\resource\\consola.ttf", 20);
+	AscPic = fopen("D:\\resource\\AscPic.txt", "r");
+	bgm = Load_Music("D:\\resource\\Badapple.mp3");
+#else
 	Font = TTF_OpenFont("resource/consola.ttf", 9);
 	FPSFont = TTF_OpenFont("resource/consola.ttf", 20);
 	AscPic = fopen("resource/AscPic.txt", "r");
 	bgm = Load_Music("resource/Badapple.mp3");
+#endif
 	if (AscPic == NULL)
 	{
 		Error(0x9F);
@@ -126,7 +145,7 @@ void Print_Ascii(void)
 		{
 			Error(ERROR_PRINTTEXT);
 		}
-		CopyToSurface(40, count * AscFace->h, AscFace, Screen, NULL);
+		CopyToSurface(0, count * AscFace->h, AscFace, Screen, NULL);
 		SDL_FreeSurface(AscFace);
 		count++;
 	}

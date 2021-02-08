@@ -3,9 +3,17 @@ This function lib edit by KosWu.
 KosWu's Blog: blog.koswu.com
 */
 /*头文件声明*/
+#ifdef NXDK
+#include <SDL.h>
+#include <SDL_ttf.h>
+#include <SDL_mixer.h>
+#include <hal/debug.h>
+#include <hal/video.h>
+#else
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_ttf.h"
 #include "SDL2/SDL_mixer.h"
+#endif
 #include "common.h"
 #include "error.h"
 /*全局变量*/
