@@ -24,11 +24,11 @@
 #define FRAME_PER_SECOND 30
 
 #ifdef NXDK
-	static const char *font  = "D:\\resource\\consola.ttf";
+	static const char *video_font  = "D:\\resource\\consola.ttf";
 	//static const char *music = "D:\\resource\\Badapple.ogg";
 	static const char *video_file = "D:\\resource\\AscPic.txt";
 #else
-	static const char *font  = "resource/consola.ttf";
+	static const char *video_font  = "resource/consola.ttf";
 	//static const char *music = "resource/Badapple.mp3";
 	static const char *video_file = "resource/AscPic.txt";
 #endif
@@ -43,15 +43,8 @@ typedef struct SDL{
     SDL_Surface  *Surface;
     SDL_Surface  *FpsCount;
     SDL_Event     Event;
-    SDL_Color     FontColor;
     SDL_Surface  *video;   // ??
 } SDL;
-
-typedef struct TTF{
-    TTF_Font *Font;
-    TTF_Font *FpsFont;
-    TTF_Font *DefaultFont;
-} TTF;
 
 typedef struct MIX {
     Mix_Music *bgm;

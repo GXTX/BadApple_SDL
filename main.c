@@ -3,7 +3,6 @@
 int main(void)
 {
 	SDL *sdl = malloc(sizeof(SDL));
-	TTF *ttf = malloc(sizeof(TTF));
 	//MIX *mix = malloc(sizeof(MIX));
 
 	Timer fps = {0, 0};
@@ -34,8 +33,7 @@ int main(void)
 
 	fps.last_time = SDL_GetTicks();
 
-	ttf->Font = TTF_OpenFont(font, 9);
-	ttf->FpsFont = TTF_OpenFont(font, 20);
+	TTF_Font *font = TTF_OpenFont(video_font, 9);
 
 	video = fopen(video_file, "r");
 	if (video == NULL) {
@@ -45,11 +43,10 @@ int main(void)
 
 	while (1) {
 		// Clear the screen
-		SDL_FillRect(sdl->Surface, &(sdl->Surface->clip_rect), 
-			SDL_MapRGB(sdl->Surface->format, 0x3F, 0x3F, 0x3F));
+		SDL_FillRect(sdl->Surface, &(sdl->Surface->clip_rect), 0);
 
-		file_to_surface(sdl, ttf->Font, &video);
-		PrintFPS(sdl, ttf->Font);
+		file_to_surface(sdl, font, &video);
+		PrintFPS(sdl, font);
 
 		update_screen(sdl, &fps);
 
@@ -87,6 +84,8 @@ void file_to_surface(SDL *sdl, TTF_Font *font, FILE **video)
 	int count = 0;
 	char buffer[200] = "ddd";
 
+	SDL_Color color = {0x80, 0x80, 0x80, 0xFF};
+
 	while (count < 60) {
 		if (fgets(buffer, 199, *video) == NULL) {
 			SDL_Delay(5000);
@@ -95,7 +94,7 @@ void file_to_surface(SDL *sdl, TTF_Font *font, FILE **video)
 
 		buffer[160] = '\0';
 
-		sdl->video = TTF_RenderText_Solid(font, buffer, sdl->FontColor);
+		sdl->video = TTF_RenderText_Solid(font, buffer, color);
 		if (sdl->video == NULL){
 			//printf("%s\n", SDL_GetError());
 			//goto the_end;
@@ -129,6 +128,8 @@ void PrintFPS(SDL *sdl, TTF_Font *font)
 	char fpsch[10] = "FPS:";
 	int temptime;
 
+	SDL_Color color = {0xFF, 0x00, 0x00, 0xFF};
+
 	if (Updatefps.last_time == 0) {
 		Updatefps.last_time = SDL_GetTicks();
 		return;
@@ -142,7 +143,7 @@ void PrintFPS(SDL *sdl, TTF_Font *font)
 		Updatefps.time = 0;
 
 		sprintf(fpsch, "FPS: %i", Frame);
-		sdl->FpsCount = TTF_RenderText_Solid(font, fpsch, sdl->FontColor);
+		sdl->FpsCount = TTF_RenderText_Solid(font, fpsch, color);
 		if (sdl->FpsCount == NULL) {
 			//Error(ERROR_PRINTTEXT);
 		}
@@ -150,7 +151,7 @@ void PrintFPS(SDL *sdl, TTF_Font *font)
 	}
 
 	if (sdl->FpsCount == NULL) {
-		sdl->FpsCount = TTF_RenderText_Solid(font, "FPS:0", sdl->FontColor);
+		sdl->FpsCount = TTF_RenderText_Solid(font, "FPS:0", color);
 		if (sdl->FpsCount == NULL) {
 			//Error(ERROR_PRINTTEXT);
 		}
