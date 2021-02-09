@@ -5,9 +5,6 @@ int main(void)
 	SDL *sdl = malloc(sizeof(SDL));
 	//MIX *mix = malloc(sizeof(MIX));
 
-	Timer fps = {0, 0};
-	FILE *video;
-
 #ifdef NXDK
 	XVideoSetMode(WIDTH, HEIGHT, 16, REFRESH_DEFAULT);
 #endif
@@ -17,11 +14,11 @@ int main(void)
 		goto the_end;
 	}
 
-	sdl->Window = SDL_CreateWindow("Bad Apple!!", SDL_WINDOWPOS_UNDEFINED,
+	sdl->window = SDL_CreateWindow("Bad Apple!!", SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
-	sdl->Surface = SDL_GetWindowSurface(sdl->Window);
+	sdl->windowSurface = SDL_GetWindowSurface(sdl->window);
 
-	if (sdl->Surface == NULL) {
+	if (sdl->windowSurface == NULL) {
 		//printf("%s\n", SDL_GetError());
 		goto the_end;
 	}
@@ -31,27 +28,27 @@ int main(void)
 		goto the_end;
 	}
 
-	fps.last_time = SDL_GetTicks();
+	TTF_Font *font = TTF_OpenFont(videoFont, 9);
 
-	TTF_Font *font = TTF_OpenFont(video_font, 9);
-
-	video = fopen(video_file, "r");
+	FILE *video = fopen(videoFile, "r");
 	if (video == NULL) {
 		//printf("Unable to open file: 0x%X\n", errno);
 		goto the_end;
 	}
 
+	Timer fps = {SDL_GetTicks(), 0};
+
 	while (1) {
 		// Clear the screen
-		SDL_FillRect(sdl->Surface, &(sdl->Surface->clip_rect), 0);
+		SDL_FillRect(sdl->windowSurface, &(sdl->windowSurface->clip_rect), 0);
 
 		file_to_surface(sdl, font, &video);
 		PrintFPS(sdl, font);
 
 		update_screen(sdl, &fps);
 
-		while (SDL_PollEvent(&sdl->Event)) {
-			if (sdl->Event.type == SDL_QUIT) {
+		while (SDL_PollEvent(&sdl->event)) {
+			if (sdl->event.type == SDL_QUIT) {
 				goto the_end;
 			}
 		}
@@ -65,18 +62,21 @@ the_end:
 
 void update_screen(SDL *sdl, Timer *fps)
 {
-	if ((SDL_GetTicks() - fps->last_time) < (1000 / FRAME_PER_SECOND)) {
-		SDL_Delay(1000 / FRAME_PER_SECOND - (SDL_GetTicks() - fps->last_time));
+	if ((SDL_GetTicks() - fps->lastTime) < (1000 / FRAME_PER_SECOND)) {
+		SDL_Delay(1000 / FRAME_PER_SECOND - (SDL_GetTicks() - fps->lastTime));
 	}
 
-	fps->last_time = SDL_GetTicks();
+	fps->lastTime = SDL_GetTicks();
 
-	if (SDL_UpdateWindowSurface(sdl->Window) < 0) {
-		//printf("%s\n", SDL_GetError());
-		//goto the_end;
-	}
+	SDL_UpdateWindowSurface(sdl->window);
 
 	Frame++;
+}
+
+void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_Rect *cli)
+{
+	SDL_Rect location = {x, y, 0, 0};
+	SDL_BlitSurface(source, cli, target, &location);
 }
 
 void file_to_surface(SDL *sdl, TTF_Font *font, FILE **video)
@@ -100,7 +100,7 @@ void file_to_surface(SDL *sdl, TTF_Font *font, FILE **video)
 			//goto the_end;
 		}
 
-		CopyToSurface(0, count * sdl->video->h, sdl->video, sdl->Surface, NULL);
+		CopyToSurface(0, count * sdl->video->h, sdl->video, sdl->windowSurface, NULL);
 		SDL_FreeSurface(sdl->video);
 
 		count++;
@@ -117,12 +117,6 @@ void file_to_surface(SDL *sdl, TTF_Font *font, FILE **video)
 	}
 }
 
-void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_Rect *cli)
-{
-	SDL_Rect location = {x, y, 0, 0};
-	SDL_BlitSurface(source, cli, target, &location);
-}
-
 void PrintFPS(SDL *sdl, TTF_Font *font)
 {
 	char fpsch[10] = "FPS:";
@@ -130,32 +124,32 @@ void PrintFPS(SDL *sdl, TTF_Font *font)
 
 	SDL_Color color = {0xFF, 0x00, 0x00, 0xFF};
 
-	if (Updatefps.last_time == 0) {
-		Updatefps.last_time = SDL_GetTicks();
+	if (Updatefps.lastTime == 0) {
+		Updatefps.lastTime = SDL_GetTicks();
 		return;
 	}
 
 	temptime = SDL_GetTicks();
-	Updatefps.time += temptime - Updatefps.last_time;
-	Updatefps.last_time = temptime;
+	Updatefps.time += temptime - Updatefps.lastTime;
+	Updatefps.lastTime = temptime;
 
 	if (Updatefps.time >= 1000) {
 		Updatefps.time = 0;
 
 		sprintf(fpsch, "FPS: %i", Frame);
-		sdl->FpsCount = TTF_RenderText_Solid(font, fpsch, color);
-		if (sdl->FpsCount == NULL) {
+		sdl->fpsCount = TTF_RenderText_Solid(font, fpsch, color);
+		if (sdl->fpsCount == NULL) {
 			//Error(ERROR_PRINTTEXT);
 		}
 		Frame = 0;
 	}
 
-	if (sdl->FpsCount == NULL) {
-		sdl->FpsCount = TTF_RenderText_Solid(font, "FPS:0", color);
-		if (sdl->FpsCount == NULL) {
+	if (sdl->fpsCount == NULL) {
+		sdl->fpsCount = TTF_RenderText_Solid(font, "FPS:0", color);
+		if (sdl->fpsCount == NULL) {
 			//Error(ERROR_PRINTTEXT);
 		}
 	}
 
-	CopyToSurface(WIDTH - sdl->FpsCount->w, 0, sdl->FpsCount, sdl->Surface, NULL);
+	CopyToSurface(WIDTH - sdl->fpsCount->w, 0, sdl->fpsCount, sdl->windowSurface, NULL);
 }

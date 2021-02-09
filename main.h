@@ -24,25 +24,25 @@
 #define FRAME_PER_SECOND 30
 
 #ifdef NXDK
-	static const char *video_font  = "D:\\resource\\consola.ttf";
+	static const char *videoFont  = "D:\\resource\\consola.ttf";
 	//static const char *music = "D:\\resource\\Badapple.ogg";
-	static const char *video_file = "D:\\resource\\AscPic.txt";
+	static const char *videoFile = "D:\\resource\\AscPic.txt";
 #else
-	static const char *video_font  = "resource/consola.ttf";
+	static const char *videoFont  = "resource/consola.ttf";
 	//static const char *music = "resource/Badapple.mp3";
-	static const char *video_file = "resource/AscPic.txt";
+	static const char *videoFile = "resource/AscPic.txt";
 #endif
 
 typedef struct Timer {
-	uint32_t last_time;
+	uint32_t lastTime;
 	int time;
 } Timer;
 
 typedef struct SDL{
-    SDL_Window   *Window;
-    SDL_Surface  *Surface;
-    SDL_Surface  *FpsCount;
-    SDL_Event     Event;
+    SDL_Window   *window;
+    SDL_Surface  *windowSurface;
+    SDL_Surface  *fpsCount;
+    SDL_Event     event;
     SDL_Surface  *video;   // ??
 } SDL;
 
