@@ -3,7 +3,6 @@
 int main(void)
 {
 	SDL *sdl = malloc(sizeof(SDL));
-	//MIX *mix = malloc(sizeof(MIX));
 
 #ifdef NXDK
 	XVideoSetMode(WIDTH, HEIGHT, 16, REFRESH_DEFAULT);
@@ -37,6 +36,15 @@ int main(void)
 	}
 
 	Timer fps = {SDL_GetTicks(), 0};
+
+	// Now with audio!
+	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024);
+	Mix_Init(MIX_INIT_OGG);
+
+	Mix_Music *audio = Mix_LoadMUS(music);
+
+	Mix_VolumeMusic(MIX_MAX_VOLUME);
+	Mix_PlayMusic(audio, 1);
 
 	while (1) {
 		// Clear the screen
@@ -135,21 +143,25 @@ void PrintFPS(SDL *sdl, TTF_Font *font)
 
 	if (Updatefps.time >= 1000) {
 		Updatefps.time = 0;
-
+#if 0
 		sprintf(fpsch, "FPS: %i", Frame);
 		sdl->fpsCount = TTF_RenderText_Solid(font, fpsch, color);
 		if (sdl->fpsCount == NULL) {
 			//Error(ERROR_PRINTTEXT);
 		}
+#endif
 		Frame = 0;
 	}
 
 	if (sdl->fpsCount == NULL) {
+#if 0
 		sdl->fpsCount = TTF_RenderText_Solid(font, "FPS:0", color);
 		if (sdl->fpsCount == NULL) {
 			//Error(ERROR_PRINTTEXT);
 		}
+#endif
 	}
-
+#if 0
 	CopyToSurface(WIDTH - sdl->fpsCount->w, 0, sdl->fpsCount, sdl->windowSurface, NULL);
+#endif
 }

@@ -25,11 +25,11 @@
 
 #ifdef NXDK
 	static const char *videoFont  = "D:\\resource\\consola.ttf";
-	//static const char *music = "D:\\resource\\Badapple.ogg";
+	static const char *music = "D:\\resource\\Badapple.ogg";
 	static const char *videoFile = "D:\\resource\\AscPic.txt";
 #else
 	static const char *videoFont  = "resource/consola.ttf";
-	//static const char *music = "resource/Badapple.mp3";
+	static const char *music = "resource/Badapple.mp3";
 	static const char *videoFile = "resource/AscPic.txt";
 #endif
 
@@ -45,11 +45,6 @@ typedef struct SDL{
     SDL_Event     event;
     SDL_Surface  *video;   // ??
 } SDL;
-
-typedef struct MIX {
-    Mix_Music *bgm;
-    Mix_Chunk *chunk;
-} MIX;
 
 Timer Updatefps;
 
