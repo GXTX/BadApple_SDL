@@ -10,7 +10,7 @@ int main(void)
 	FILE *video;
 
 #ifdef NXDK
-	XVideoSetMode(WIDTH, HEIGHT, BPP, REFRESH_DEFAULT);
+	XVideoSetMode(WIDTH, HEIGHT, 16, REFRESH_DEFAULT);
 #endif
 
 	if (SDL_Init((SDL_INIT_VIDEO | SDL_INIT_EVENTS)) < 0) {
@@ -18,7 +18,8 @@ int main(void)
 		goto the_end;
 	}
 
-	sdl->Window = SDL_CreateWindow("Bad Apple!!", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, 0);
+	sdl->Window = SDL_CreateWindow("Bad Apple!!", SDL_WINDOWPOS_UNDEFINED,
+		SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
 	sdl->Surface = SDL_GetWindowSurface(sdl->Window);
 
 	if (sdl->Surface == NULL) {
@@ -42,9 +43,6 @@ int main(void)
 		goto the_end;
 	}
 
-	//SDL_FillRect(sdl->Surface, &(sdl->Surface->clip_rect), 
-	//	SDL_MapRGB(sdl->Surface->format, 0x3F, 0x3F, 0x3F));
-
 	while (1) {
 		// Clear the screen
 		SDL_FillRect(sdl->Surface, &(sdl->Surface->clip_rect), 
@@ -60,6 +58,7 @@ int main(void)
 				goto the_end;
 			}
 		}
+
 	}
 
 the_end:
@@ -86,8 +85,6 @@ void update_screen(SDL *sdl, Timer *fps)
 void file_to_surface(SDL *sdl, TTF_Font *font, FILE **video)
 {
 	int count = 0;
-	int temp;
-
 	char buffer[200] = "ddd";
 
 	while (count < 60) {
@@ -110,7 +107,9 @@ void file_to_surface(SDL *sdl, TTF_Font *font, FILE **video)
 		count++;
 	}
 
-    // Why?
+	// To keep sync with the base video we need to read 2 characters every "frame"
+	// otherwise there is a rolling shutter effect.
+	int temp;
 	temp = fgetc(*video);
 	temp = fgetc(*video);
 	if (temp == EOF) {
@@ -128,7 +127,6 @@ void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_R
 void PrintFPS(SDL *sdl, TTF_Font *font)
 {
 	char fpsch[10] = "FPS:";
-	char temp[4];
 	int temptime;
 
 	if (Updatefps.last_time == 0) {
@@ -142,8 +140,8 @@ void PrintFPS(SDL *sdl, TTF_Font *font)
 
 	if (Updatefps.time >= 1000) {
 		Updatefps.time = 0;
-		itoa(Frame, temp, 10);
-		strcat(fpsch, temp);
+
+		sprintf(fpsch, "FPS: %i", Frame);
 		sdl->FpsCount = TTF_RenderText_Solid(font, fpsch, sdl->FontColor);
 		if (sdl->FpsCount == NULL) {
 			//Error(ERROR_PRINTTEXT);
@@ -159,40 +157,4 @@ void PrintFPS(SDL *sdl, TTF_Font *font)
 	}
 
 	CopyToSurface(WIDTH - sdl->FpsCount->w, 0, sdl->FpsCount, sdl->Surface, NULL);
-}
-
-char *itoa(int num, char *str, int radix)
-{
-	char index[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	uint32_t unum;
-
-	int i = 0, j, k;
-
-	if (radix == 10 && num < 0) {
-		unum = (uint32_t)-num;
-		str[i++] = '-';
-	} else {
-		unum = (uint32_t)num;
-	}
-
-	do {
-		str[i++] = index[unum % (uint32_t)radix];
-		unum /= radix;
-	} while (unum);
-
-	str[i] = '\0';
-
-	if (str[0] == '-') {
-		k = 1;
-	} else {
-		k = 0;
-	}
-
-	for (j = k; j < (i - 1) / 2.0 + k; j++) {
-		num = str[j];
-		str[j] = str[i - j - 1 + k];
-		str[i - j - 1 + k] = num;
-	}
-
-	return str;
 }

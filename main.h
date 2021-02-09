@@ -66,5 +66,4 @@ int Frame = 0;
 void update_screen(SDL *sdl, Timer *fps);
 void file_to_surface(SDL *sdl, TTF_Font *font, FILE **video);
 void PrintFPS(SDL *sdl, TTF_Font *font);
-char *itoa(int num, char *str, int radix);
 void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_Rect *cli);
