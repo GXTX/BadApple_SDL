@@ -35,16 +35,15 @@ int main(void)
 		goto the_end;
 	}
 
-	char *video_mem = malloc((1024 * 1000 * 32));
-	fread(video_mem, 1, (1024 * 1000 * 32), video);
+	char *video_mem = malloc((1024 * 1000 * 8));
+	fread(video_mem, 1, (1024 * 1000 * 8), video);
 	fclose(video);
 
-	int pointer_location = 0;
+	uint32_t pointer_location = 0x00;
 
 	Timer fps = {SDL_GetTicks(), 0};
 
 	// Now with audio!
-#if 0
 	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024);
 	Mix_Init(MIX_INIT_OGG);
 
@@ -52,7 +51,6 @@ int main(void)
 
 	Mix_VolumeMusic(MIX_MAX_VOLUME);
 	Mix_PlayMusic(audio, 1);
-#endif
 
 	while (1) {
 		// Clear the screen
@@ -95,7 +93,7 @@ void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_R
 	SDL_BlitSurface(source, cli, target, &location);
 }
 
-void file_to_surface(SDL *sdl, TTF_Font *font, char *video, int *loc)
+void file_to_surface(SDL *sdl, TTF_Font *font, char *video, uint32_t *loc)
 {
 	int count = 0;
 	char *buffer = malloc(200);
@@ -103,8 +101,8 @@ void file_to_surface(SDL *sdl, TTF_Font *font, char *video, int *loc)
 	SDL_Color color = {0x80, 0x80, 0x80, 0xFF};
 
 	while (count < 60) {
-		memcpy(buffer, (video + (int)*loc), 199);
-		*loc += 199;
+		memcpy(buffer, (video + *loc), 0x9F);
+		*loc += 0xA2;
 
 		*(buffer+160) = '\0';
 
@@ -117,9 +115,10 @@ void file_to_surface(SDL *sdl, TTF_Font *font, char *video, int *loc)
 		count++;
 	}
 
-	// To keep sync with the base video we need to read 2 characters every "frame"
-	// otherwise there is a rolling shutter effect.
-	*loc += 2;
+	free(buffer);
+
+	// Every 60 lines there's a blank line, we need to skip it.
+	*loc += 0x02;
 }
 
 void PrintFPS(SDL *sdl, TTF_Font *font)
