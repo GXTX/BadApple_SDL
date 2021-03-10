@@ -35,9 +35,16 @@ int main(void)
 		goto the_end;
 	}
 
+	char *video_mem = malloc((1024 * 1000 * 32));
+	fread(video_mem, 1, (1024 * 1000 * 32), video);
+	fclose(video);
+
+	int pointer_location = 0;
+
 	Timer fps = {SDL_GetTicks(), 0};
 
 	// Now with audio!
+#if 0
 	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024);
 	Mix_Init(MIX_INIT_OGG);
 
@@ -45,12 +52,13 @@ int main(void)
 
 	Mix_VolumeMusic(MIX_MAX_VOLUME);
 	Mix_PlayMusic(audio, 1);
+#endif
 
 	while (1) {
 		// Clear the screen
 		SDL_FillRect(sdl->windowSurface, &(sdl->windowSurface->clip_rect), 0);
 
-		file_to_surface(sdl, font, &video);
+		file_to_surface(sdl, font, video_mem, &pointer_location);
 		PrintFPS(sdl, font);
 
 		update_screen(sdl, &fps);
@@ -87,28 +95,23 @@ void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_R
 	SDL_BlitSurface(source, cli, target, &location);
 }
 
-void file_to_surface(SDL *sdl, TTF_Font *font, FILE **video)
+void file_to_surface(SDL *sdl, TTF_Font *font, char *video, int *loc)
 {
 	int count = 0;
-	char buffer[200] = "ddd";
+	char *buffer = malloc(200);
 
 	SDL_Color color = {0x80, 0x80, 0x80, 0xFF};
 
 	while (count < 60) {
-		if (fgets(buffer, 199, *video) == NULL) {
-			SDL_Delay(5000);
-			//goto the_end;
-		}
+		memcpy(buffer, (video + (int)*loc), 199);
+		*loc += 199;
 
-		buffer[160] = '\0';
+		*(buffer+160) = '\0';
 
 		sdl->video = TTF_RenderText_Solid(font, buffer, color);
-		if (sdl->video == NULL){
-			//printf("%s\n", SDL_GetError());
-			//goto the_end;
+		if (sdl->video != NULL) {
+			CopyToSurface(0, count * sdl->video->h, sdl->video, sdl->windowSurface, NULL);
 		}
-
-		CopyToSurface(0, count * sdl->video->h, sdl->video, sdl->windowSurface, NULL);
 		SDL_FreeSurface(sdl->video);
 
 		count++;
@@ -116,13 +119,7 @@ void file_to_surface(SDL *sdl, TTF_Font *font, FILE **video)
 
 	// To keep sync with the base video we need to read 2 characters every "frame"
 	// otherwise there is a rolling shutter effect.
-	int temp;
-	temp = fgetc(*video);
-	temp = fgetc(*video);
-	if (temp == EOF) {
-		SDL_Delay(5000);
-		//goto the_end;
-	}
+	*loc += 2;
 }
 
 void PrintFPS(SDL *sdl, TTF_Font *font)
@@ -143,25 +140,19 @@ void PrintFPS(SDL *sdl, TTF_Font *font)
 
 	if (Updatefps.time >= 1000) {
 		Updatefps.time = 0;
-#if 0
 		sprintf(fpsch, "FPS: %i", Frame);
 		sdl->fpsCount = TTF_RenderText_Solid(font, fpsch, color);
 		if (sdl->fpsCount == NULL) {
 			//Error(ERROR_PRINTTEXT);
 		}
-#endif
 		Frame = 0;
 	}
 
 	if (sdl->fpsCount == NULL) {
-#if 0
 		sdl->fpsCount = TTF_RenderText_Solid(font, "FPS:0", color);
 		if (sdl->fpsCount == NULL) {
 			//Error(ERROR_PRINTTEXT);
 		}
-#endif
 	}
-#if 0
 	CopyToSurface(WIDTH - sdl->fpsCount->w, 0, sdl->fpsCount, sdl->windowSurface, NULL);
-#endif
 }
