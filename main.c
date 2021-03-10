@@ -54,7 +54,7 @@ int main(void)
 
 	while (1) {
 		// Clear the screen
-		SDL_FillRect(sdl->windowSurface, &(sdl->windowSurface->clip_rect), 0);
+		SDL_FillRect(sdl->windowSurface, NULL, 0);
 
 		file_to_surface(sdl, font, video_mem, &pointer_location);
 		PrintFPS(sdl, font);
