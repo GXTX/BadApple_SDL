@@ -17,8 +17,6 @@
     #define WIDTH 720
     #define HEIGHT 480
 #else
-    //#define WIDTH 800
-    //#define HEIGHT 640
     #define WIDTH 800
     #define HEIGHT 660
 #endif

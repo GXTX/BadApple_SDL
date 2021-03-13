@@ -35,38 +35,29 @@ int main(void)
 		goto the_end;
 	}
 
+	// Push the entire 'video' into a buffer in memory.
 	char *video_mem = malloc((1024 * 1000 * 8));
 	fread(video_mem, 1, (1024 * 1000 * 8), video);
 	fclose(video);
 
+	// Used to move the pointer location of the video.
 	uint32_t pointer_location = 0x00;
 
-
-	// currently outputs a single line of W's, work on making it 60 lines
+	// Pre-render our text glyphs and populate their 'metrics'.
+	// TODO: Make this smaller, only create surfaces for ones that we need to actually display.
 	SDL_Color text_color = {0x80, 0x80, 0x80, 0xFF};
 	SDL_Surface *glyphs[128];
+	metrics glyph_metrics[100];
+
 	for (int i = 0; i < 128; i++) {
 		glyphs[i] = TTF_RenderGlyph_Solid(font, i, text_color);
 	}
-	
-	metrics glyph_metrics[100];
+
 	for (int i = 0; i < 100; i++) {
 		TTF_GlyphMetrics(font, i, &glyph_metrics[i].minx, NULL, NULL, &glyph_metrics[i].maxy, &glyph_metrics[i].advance);
 	}
+    // ===
 
-	//int minx, maxy, advance;
-	//TTF_GlyphMetrics(font, 'W', &minx, NULL, NULL, &maxy, &advance);
-/*
-	for (int i = 0; i < 60; i++) {
-		for (int b = 0; b < 0x9F; b++) {
-			CopyToSurface(b * glyph_metrics[87].advance, i * glyphs[87]->h, glyphs[87], sdl->windowSurface, NULL);
-		}
-	}
-
-	SDL_UpdateWindowSurface(sdl->window);
-
-	while(1) {}
-*/
 	Timer fps = {SDL_GetTicks(), 0};
 
 	// Now with audio!
@@ -121,10 +112,7 @@ void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_R
 
 void file_to_surface(SDL *sdl, TTF_Font *font, char *video, uint32_t *loc, metrics *glyph_metrics, SDL_Surface **glyphs)
 {
-	int count = 0;
 	char *buffer = malloc(200);
-
-	SDL_Color color = {0x80, 0x80, 0x80, 0xFF};
 
 	for (int i = 0; i < 60; i++) {
 		memcpy(buffer, (video + *loc), 0x9F);
@@ -133,22 +121,7 @@ void file_to_surface(SDL *sdl, TTF_Font *font, char *video, uint32_t *loc, metri
 			CopyToSurface(b * glyph_metrics[buffer[b]].advance, i * glyphs[buffer[b]]->h, glyphs[buffer[b]], sdl->windowSurface, NULL);
 		}
 	}
-/*
-	while (count < 60) {
-		memcpy(buffer, (video + *loc), 0x9F);
-		*loc += 0xA2;
 
-		*(buffer+160) = '\0';
-
-		sdl->video = TTF_RenderText_Solid(font, buffer, color);
-		if (sdl->video != NULL) {
-			CopyToSurface(0, count * sdl->video->h, sdl->video, sdl->windowSurface, NULL);
-		}
-		SDL_FreeSurface(sdl->video);
-
-		count++;
-	}
-*/
 	free(buffer);
 
 	// Every 60 lines there's a blank line, we need to skip it.
