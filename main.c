@@ -41,6 +41,32 @@ int main(void)
 
 	uint32_t pointer_location = 0x00;
 
+
+	// currently outputs a single line of W's, work on making it 60 lines
+	SDL_Color text_color = {0x80, 0x80, 0x80, 0xFF};
+	SDL_Surface *glyphs[128];
+	for (int i = 0; i < 128; i++) {
+		glyphs[i] = TTF_RenderGlyph_Solid(font, i, text_color);
+	}
+	
+	metrics glyph_metrics[100];
+	for (int i = 0; i < 100; i++) {
+		TTF_GlyphMetrics(font, i, &glyph_metrics[i].minx, NULL, NULL, &glyph_metrics[i].maxy, &glyph_metrics[i].advance);
+	}
+
+	//int minx, maxy, advance;
+	//TTF_GlyphMetrics(font, 'W', &minx, NULL, NULL, &maxy, &advance);
+/*
+	for (int i = 0; i < 60; i++) {
+		for (int b = 0; b < 0x9F; b++) {
+			CopyToSurface(b * glyph_metrics[87].advance, i * glyphs[87]->h, glyphs[87], sdl->windowSurface, NULL);
+		}
+	}
+
+	SDL_UpdateWindowSurface(sdl->window);
+
+	while(1) {}
+*/
 	Timer fps = {SDL_GetTicks(), 0};
 
 	// Now with audio!
@@ -56,7 +82,7 @@ int main(void)
 		// Clear the screen
 		SDL_FillRect(sdl->windowSurface, NULL, 0);
 
-		file_to_surface(sdl, font, video_mem, &pointer_location);
+		file_to_surface(sdl, font, video_mem, &pointer_location, &glyph_metrics, glyphs);
 		PrintFPS(sdl, font);
 
 		update_screen(sdl, &fps);
@@ -93,13 +119,21 @@ void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_R
 	SDL_BlitSurface(source, cli, target, &location);
 }
 
-void file_to_surface(SDL *sdl, TTF_Font *font, char *video, uint32_t *loc)
+void file_to_surface(SDL *sdl, TTF_Font *font, char *video, uint32_t *loc, metrics *glyph_metrics, SDL_Surface **glyphs)
 {
 	int count = 0;
 	char *buffer = malloc(200);
 
 	SDL_Color color = {0x80, 0x80, 0x80, 0xFF};
 
+	for (int i = 0; i < 60; i++) {
+		memcpy(buffer, (video + *loc), 0x9F);
+		*loc += 0xA2;
+		for (int b = 0; b < 0x9F; b++) {
+			CopyToSurface(b * glyph_metrics[buffer[b]].advance, i * glyphs[buffer[b]]->h, glyphs[buffer[b]], sdl->windowSurface, NULL);
+		}
+	}
+/*
 	while (count < 60) {
 		memcpy(buffer, (video + *loc), 0x9F);
 		*loc += 0xA2;
@@ -114,7 +148,7 @@ void file_to_surface(SDL *sdl, TTF_Font *font, char *video, uint32_t *loc)
 
 		count++;
 	}
-
+*/
 	free(buffer);
 
 	// Every 60 lines there's a blank line, we need to skip it.

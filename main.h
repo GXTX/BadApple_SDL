@@ -17,8 +17,10 @@
     #define WIDTH 720
     #define HEIGHT 480
 #else
+    //#define WIDTH 800
+    //#define HEIGHT 640
     #define WIDTH 800
-    #define HEIGHT 640
+    #define HEIGHT 660
 #endif
 
 #define FRAME_PER_SECOND 30
@@ -46,12 +48,18 @@ typedef struct SDL{
     SDL_Surface  *video;   // ??
 } SDL;
 
+typedef struct metrics {
+	int minx;
+	int maxy;
+	int advance;
+} metrics;
+
 Timer Updatefps;
 
 // Why global?
 int Frame = 0;
 
 void update_screen(SDL *sdl, Timer *fps);
-void file_to_surface(SDL *sdl, TTF_Font *font, char *video, uint32_t *loc);
+void file_to_surface(SDL *sdl, TTF_Font *font, char *video, uint32_t *loc, metrics *glyph_metrics, SDL_Surface **glyphs);
 void PrintFPS(SDL *sdl, TTF_Font *font);
 void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_Rect *cli);
