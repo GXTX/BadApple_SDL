@@ -21,8 +21,8 @@ int main(void)
 	FILE *video = fopen(videoFile, "r");
 
 	// Push the entire 'video' into a buffer in memory.
-	char *video_mem = malloc((1024 * 1000 * 8));
-	fread(video_mem, 1, (1024 * 1000 * 8), video);
+	char *video_mem = malloc((1024 * 1000 * 32));
+	fread(video_mem, 1, (1024 * 1000 * 32), video);
 	fclose(video);
 
 	// Used to move the pointer location of the video.
@@ -81,12 +81,17 @@ void file_to_surface(SDL *sdl, char *video, uint32_t *loc, Glyphs *glyphs)
 {
 	char *buffer = malloc(200);
 
-	for (uint8_t i = 0; i < 0x3C; i++) {
+	for (uint8_t y = 0; y < 0x3C; y++) {
 		memcpy(buffer, (video + *loc), 0x9F);
 		*loc += 0xA2;
-		for (uint8_t b = 0; b < 0x9F; b++) {
-			SDL_Rect location = {b * glyphs[(uint8_t)buffer[b]-32].advance, i * glyphs[(uint8_t)buffer[b]-32].surface->h, 0, 0};
-			SDL_BlitSurface(glyphs[(uint8_t)buffer[b]-32].surface, NULL, sdl->windowSurface, &location);
+#ifdef NXDK
+		// Don't waste time drawing lines we can't even see, we lose about 20 lines on Xbox with 720x480.
+		if (y > 40)
+			continue;
+#endif
+		for (uint8_t x = 0; x < 0x9F; x++) {
+			SDL_Rect location = {x * glyphs[(uint8_t)buffer[x]-32].advance, y * glyphs[(uint8_t)buffer[x]-32].surface->h, 0, 0};
+			SDL_BlitSurface(glyphs[(uint8_t)buffer[x]-32].surface, NULL, sdl->windowSurface, &location);
 		}
 	}
 
