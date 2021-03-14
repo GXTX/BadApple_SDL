@@ -59,5 +59,5 @@ Timer Updatefps;
 // Why global?
 int Frame = 0;
 
-void file_to_surface(SDL *sdl, char *video, uint32_t *loc, Glyphs *glyphs);
+void file_to_surface(SDL *sdl, char *video, int *loc, Glyphs *glyphs);
 void PrintFPS(SDL *sdl, TTF_Font *font);

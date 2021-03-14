@@ -26,7 +26,7 @@ int main(void)
 	fclose(video);
 
 	// Used to move the pointer location of the video.
-	uint32_t pointer_location = 0x00;
+	int pointer_location = 0;
 
 	// Pre-render our text glyphs and populate their 'metrics'.
 	SDL_Color text_color = {0x80, 0x80, 0x80, 0xFF};
@@ -77,20 +77,30 @@ the_end:
 	return 0;
 }
 
-void file_to_surface(SDL *sdl, char *video, uint32_t *loc, Glyphs *glyphs)
+void file_to_surface(SDL *sdl, char *video, int *loc, Glyphs *glyphs)
 {
-	char *buffer = malloc(200);
+	char *buffer = malloc(159);
 
-	for (uint8_t y = 0; y < 0x3C; y++) {
-		memcpy(buffer, (video + *loc), 0x9F);
-		*loc += 0xA2;
+	for (int y = 0; y < 60; y++) {
+		memcpy(buffer, (video + *loc), 159);
+		*loc += 162;
+
 #ifdef NXDK
 		// Don't waste time drawing lines we can't even see, we lose about 20 lines on Xbox with 720x480.
 		if (y > 40)
 			continue;
 #endif
-		for (uint8_t x = 0; x < 0x9F; x++) {
+
+		for (int x = 0; x < 159; x++) {
+#ifdef VID_SCALE
+			// With some rounding we end up with a 'perfect' scale down to 720x480, don't set this
+			// automatically because we might want the perf boost of skipping lines above.
+			SDL_Rect location = {x * glyphs[(uint8_t)buffer[x]-32].advance / (float)1.11, 
+					y * glyphs[(uint8_t)buffer[x]-32].surface->h / (float)1.39, 
+					0, 0};
+#else
 			SDL_Rect location = {x * glyphs[(uint8_t)buffer[x]-32].advance, y * glyphs[(uint8_t)buffer[x]-32].surface->h, 0, 0};
+#endif
 			SDL_BlitSurface(glyphs[(uint8_t)buffer[x]-32].surface, NULL, sdl->windowSurface, &location);
 		}
 	}
@@ -98,7 +108,7 @@ void file_to_surface(SDL *sdl, char *video, uint32_t *loc, Glyphs *glyphs)
 	free(buffer);
 
 	// Every 60 lines there's a blank line, we need to skip it.
-	*loc += 0x02;
+	*loc += 2;
 }
 
 void PrintFPS(SDL *sdl, TTF_Font *font)
