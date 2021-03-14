@@ -44,17 +44,12 @@ int main(void)
 	uint32_t pointer_location = 0x00;
 
 	// Pre-render our text glyphs and populate their 'metrics'.
-	// TODO: Make this smaller, only create surfaces for ones that we need to actually display.
 	SDL_Color text_color = {0x80, 0x80, 0x80, 0xFF};
-	SDL_Surface *glyphs[128];
-	metrics glyph_metrics[100];
+	Glyphs glyphs[96];
 
-	for (int i = 0; i < 128; i++) {
-		glyphs[i] = TTF_RenderGlyph_Solid(font, i, text_color);
-	}
-
-	for (int i = 0; i < 100; i++) {
-		TTF_GlyphMetrics(font, i, &glyph_metrics[i].minx, NULL, NULL, &glyph_metrics[i].maxy, &glyph_metrics[i].advance);
+	for (int i = 32; i < 128; i++) {
+		glyphs[i-32].surface = TTF_RenderGlyph_Solid(font, i, text_color);
+		TTF_GlyphMetrics(font, i, NULL, NULL, NULL, NULL, &glyphs[i-32].advance);
 	}
     // ===
 
@@ -73,7 +68,7 @@ int main(void)
 		// Clear the screen
 		SDL_FillRect(sdl->windowSurface, NULL, 0);
 
-		file_to_surface(sdl, font, video_mem, &pointer_location, &glyph_metrics, glyphs);
+		file_to_surface(sdl, video_mem, &pointer_location, &glyphs);
 		PrintFPS(sdl, font);
 
 		update_screen(sdl, &fps);
@@ -104,21 +99,16 @@ void update_screen(SDL *sdl, Timer *fps)
 	Frame++;
 }
 
-void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_Rect *cli)
-{
-	SDL_Rect location = {x, y, 0, 0};
-	SDL_BlitSurface(source, cli, target, &location);
-}
-
-void file_to_surface(SDL *sdl, TTF_Font *font, char *video, uint32_t *loc, metrics *glyph_metrics, SDL_Surface **glyphs)
+void file_to_surface(SDL *sdl, char *video, uint32_t *loc, Glyphs *glyphs)
 {
 	char *buffer = malloc(200);
 
-	for (int i = 0; i < 60; i++) {
+	for (uint8_t i = 0; i < 0x3C; i++) {
 		memcpy(buffer, (video + *loc), 0x9F);
 		*loc += 0xA2;
-		for (int b = 0; b < 0x9F; b++) {
-			CopyToSurface(b * glyph_metrics[buffer[b]].advance, i * glyphs[buffer[b]]->h, glyphs[buffer[b]], sdl->windowSurface, NULL);
+		for (uint8_t b = 0; b < 0x9F; b++) {
+			SDL_Rect location = {b * glyphs[(uint8_t)buffer[b]-32].advance, i * glyphs[(uint8_t)buffer[b]-32].surface->h, 0, 0};
+			SDL_BlitSurface(glyphs[(uint8_t)buffer[b]-32].surface, NULL, sdl->windowSurface, &location);
 		}
 	}
 
@@ -160,5 +150,6 @@ void PrintFPS(SDL *sdl, TTF_Font *font)
 			//Error(ERROR_PRINTTEXT);
 		}
 	}
-	CopyToSurface(WIDTH - sdl->fpsCount->w, 0, sdl->fpsCount, sdl->windowSurface, NULL);
+	SDL_Rect location = {WIDTH - sdl->fpsCount->w, 0, 0, 0};
+	SDL_BlitSurface(sdl->fpsCount, NULL, sdl->windowSurface, &location);
 }

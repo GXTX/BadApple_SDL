@@ -43,14 +43,16 @@ typedef struct SDL{
     SDL_Surface  *windowSurface;
     SDL_Surface  *fpsCount;
     SDL_Event     event;
-    SDL_Surface  *video;   // ??
 } SDL;
 
 typedef struct metrics {
-	int minx;
-	int maxy;
 	int advance;
 } metrics;
+
+typedef struct Glyphs {
+    SDL_Surface *surface;
+    int advance;
+} Glyphs;
 
 Timer Updatefps;
 
@@ -58,6 +60,5 @@ Timer Updatefps;
 int Frame = 0;
 
 void update_screen(SDL *sdl, Timer *fps);
-void file_to_surface(SDL *sdl, TTF_Font *font, char *video, uint32_t *loc, metrics *glyph_metrics, SDL_Surface **glyphs);
+void file_to_surface(SDL *sdl, char *video, uint32_t *loc, Glyphs *glyphs);
 void PrintFPS(SDL *sdl, TTF_Font *font);
-void CopyToSurface(int x, int y, SDL_Surface *source, SDL_Surface *target, SDL_Rect *cli);
