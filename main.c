@@ -8,32 +8,17 @@ int main(void)
 	XVideoSetMode(WIDTH, HEIGHT, 16, REFRESH_DEFAULT);
 #endif
 
-	if (SDL_Init((SDL_INIT_VIDEO | SDL_INIT_EVENTS)) < 0) {
-		//printf("%s\n", SDL_GetError());
-		goto the_end;
-	}
+	SDL_Init((SDL_INIT_VIDEO | SDL_INIT_EVENTS));
 
 	sdl->window = SDL_CreateWindow("Bad Apple!!", SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
 	sdl->windowSurface = SDL_GetWindowSurface(sdl->window);
 
-	if (sdl->windowSurface == NULL) {
-		//printf("%s\n", SDL_GetError());
-		goto the_end;
-	}
-
-	if (TTF_Init() < 0) {
-		//printf("%s\n", TTF_GetError());
-		goto the_end;
-	}
+	TTF_Init();
 
 	TTF_Font *font = TTF_OpenFont(videoFont, 9);
 
 	FILE *video = fopen(videoFile, "r");
-	if (video == NULL) {
-		//printf("Unable to open file: 0x%X\n", errno);
-		goto the_end;
-	}
 
 	// Push the entire 'video' into a buffer in memory.
 	char *video_mem = malloc((1024 * 1000 * 8));
@@ -82,7 +67,6 @@ int main(void)
 	}
 
 the_end:
-	//Clean_Up();
 	return 0;
 }
 
@@ -138,17 +122,11 @@ void PrintFPS(SDL *sdl, TTF_Font *font)
 		Updatefps.time = 0;
 		sprintf(fpsch, "FPS: %i", Frame);
 		sdl->fpsCount = TTF_RenderText_Solid(font, fpsch, color);
-		if (sdl->fpsCount == NULL) {
-			//Error(ERROR_PRINTTEXT);
-		}
 		Frame = 0;
 	}
 
 	if (sdl->fpsCount == NULL) {
 		sdl->fpsCount = TTF_RenderText_Solid(font, "FPS:0", color);
-		if (sdl->fpsCount == NULL) {
-			//Error(ERROR_PRINTTEXT);
-		}
 	}
 	SDL_Rect location = {WIDTH - sdl->fpsCount->w, 0, 0, 0};
 	SDL_BlitSurface(sdl->fpsCount, NULL, sdl->windowSurface, &location);
