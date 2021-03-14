@@ -36,7 +36,7 @@ int main(void)
 		glyphs[i-32].surface = TTF_RenderGlyph_Solid(font, i, text_color);
 		TTF_GlyphMetrics(font, i, NULL, NULL, NULL, NULL, &glyphs[i-32].advance);
 	}
-    // ===
+	// ===
 
 	Timer fps = {SDL_GetTicks(), 0};
 
@@ -56,7 +56,14 @@ int main(void)
 		file_to_surface(sdl, video_mem, &pointer_location, &glyphs);
 		PrintFPS(sdl, font);
 
-		update_screen(sdl, &fps);
+		if ((SDL_GetTicks() - fps.lastTime) < (1000 / FRAME_PER_SECOND)) {
+			SDL_Delay(1000 / FRAME_PER_SECOND - (SDL_GetTicks() - fps.lastTime));
+		}
+
+		fps.lastTime = SDL_GetTicks();
+
+		SDL_UpdateWindowSurface(sdl->window);
+		Frame++;
 
 		while (SDL_PollEvent(&sdl->event)) {
 			if (sdl->event.type == SDL_QUIT) {
@@ -68,19 +75,6 @@ int main(void)
 
 the_end:
 	return 0;
-}
-
-void update_screen(SDL *sdl, Timer *fps)
-{
-	if ((SDL_GetTicks() - fps->lastTime) < (1000 / FRAME_PER_SECOND)) {
-		SDL_Delay(1000 / FRAME_PER_SECOND - (SDL_GetTicks() - fps->lastTime));
-	}
-
-	fps->lastTime = SDL_GetTicks();
-
-	SDL_UpdateWindowSurface(sdl->window);
-
-	Frame++;
 }
 
 void file_to_surface(SDL *sdl, char *video, uint32_t *loc, Glyphs *glyphs)

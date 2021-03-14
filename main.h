@@ -39,10 +39,10 @@ typedef struct Timer {
 } Timer;
 
 typedef struct SDL{
-    SDL_Window   *window;
-    SDL_Surface  *windowSurface;
-    SDL_Surface  *fpsCount;
-    SDL_Event     event;
+	SDL_Window   *window;
+	SDL_Surface  *windowSurface;
+	SDL_Surface  *fpsCount;
+	SDL_Event     event;
 } SDL;
 
 typedef struct metrics {
@@ -50,8 +50,8 @@ typedef struct metrics {
 } metrics;
 
 typedef struct Glyphs {
-    SDL_Surface *surface;
-    int advance;
+	SDL_Surface *surface;
+	int advance;
 } Glyphs;
 
 Timer Updatefps;
@@ -59,6 +59,5 @@ Timer Updatefps;
 // Why global?
 int Frame = 0;
 
-void update_screen(SDL *sdl, Timer *fps);
 void file_to_surface(SDL *sdl, char *video, uint32_t *loc, Glyphs *glyphs);
 void PrintFPS(SDL *sdl, TTF_Font *font);
