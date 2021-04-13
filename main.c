@@ -33,11 +33,12 @@ int main(void)
 	}
 	rewind(video);
 
-	int total_frames     = total_lines / FRAME_LINES + 1; // 1 empty line per frame
+	int total_frames     = total_lines / (FRAME_LINES + 1); // 1 empty line per frame
 	int frame_bytes      = FRAME_LINE_SIZE * FRAME_LINES + LINE_END;
 	int total_video_size = total_frames * frame_bytes;
+	int frames_q = 0;
 
-	// Push the entire 'video' into a buffer in memory.
+	// Push half of the video into memory.
 	char *video_mem = malloc(total_video_size);
 	fread(video_mem, 1, total_video_size, video);
 	fclose(video);
@@ -67,20 +68,23 @@ int main(void)
 	Mix_PlayMusic(audio, 1);
 
 	while (1) {
-		// Clear the screen
-		SDL_FillRect(sdl->windowSurface, NULL, 0);
+		if (__builtin_expect((frames_q < total_frames), 1)) {
+			// Clear the screen
+			SDL_FillRect(sdl->windowSurface, NULL, 0);
 
-		file_to_surface(sdl, video_mem, &pointer_location, &glyphs);
-		PrintFPS(sdl, font);
+			file_to_surface(sdl, video_mem, &pointer_location, &glyphs);
+			PrintFPS(sdl, font);
 
-		if ((SDL_GetTicks() - fps.lastTime) < (1000 / FRAME_PER_SECOND)) {
-			SDL_Delay(1000 / FRAME_PER_SECOND - (SDL_GetTicks() - fps.lastTime));
+			if ((SDL_GetTicks() - fps.lastTime) < (1000 / FRAME_PER_SECOND)) {
+				SDL_Delay(1000 / FRAME_PER_SECOND - (SDL_GetTicks() - fps.lastTime));
+			}
+
+			fps.lastTime = SDL_GetTicks();
+
+			SDL_UpdateWindowSurface(sdl->window);
+			Frame++;
+			frames_q++;
 		}
-
-		fps.lastTime = SDL_GetTicks();
-
-		SDL_UpdateWindowSurface(sdl->window);
-		Frame++;
 
 		while (SDL_PollEvent(&sdl->event)) {
 			if (sdl->event.type == SDL_QUIT) {
