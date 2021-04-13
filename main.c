@@ -1,5 +1,10 @@
 #include "main.h"
 
+#define MEM_SIZE (1024 * 1000 * 15)
+#define LINE_END        1   // Linux
+#define FRAME_LINES     60  // Total lines in a "frame"
+#define FRAME_LINE_SIZE 161 // Total number of chars on a single "frame" line
+
 int main(void)
 {
 	SDL *sdl = malloc(sizeof(SDL));
@@ -20,9 +25,21 @@ int main(void)
 
 	FILE *video = fopen(videoFile, "r");
 
+	int total_lines = 0;
+	for (char c = fgetc(video); c != EOF; c = fgetc(video)) {
+		if (c == '\n') {
+			total_lines++;
+		}
+	}
+	rewind(video);
+
+	int total_frames     = total_lines / FRAME_LINES + 1; // 1 empty line per frame
+	int frame_bytes      = FRAME_LINE_SIZE * FRAME_LINES + LINE_END;
+	int total_video_size = total_frames * frame_bytes;
+
 	// Push the entire 'video' into a buffer in memory.
-	char *video_mem = malloc((1024 * 1000 * 32));
-	fread(video_mem, 1, (1024 * 1000 * 32), video);
+	char *video_mem = malloc(total_video_size);
+	fread(video_mem, 1, total_video_size, video);
 	fclose(video);
 
 	// Used to move the pointer location of the video.
@@ -79,11 +96,11 @@ the_end:
 
 void file_to_surface(SDL *sdl, char *video, int *loc, Glyphs *glyphs)
 {
-	char *buffer = malloc(159);
+	char *buffer = malloc(FRAME_LINE_SIZE);
 
-	for (int y = 0; y < 60; y++) {
-		memcpy(buffer, (video + *loc), 159);
-		*loc += 162;
+	for (int y = 0; y < FRAME_LINES; y++) {
+		memcpy(buffer, (video + *loc), FRAME_LINE_SIZE - LINE_END);
+		*loc += FRAME_LINE_SIZE;
 
 #ifdef NXDK
 		// Don't waste time drawing lines we can't even see, we lose about 20 lines on Xbox with 720x480.
@@ -91,7 +108,7 @@ void file_to_surface(SDL *sdl, char *video, int *loc, Glyphs *glyphs)
 			continue;
 #endif
 
-		for (int x = 0; x < 159; x++) {
+		for (int x = 0; x < FRAME_LINE_SIZE - LINE_END; x++) {
 #ifdef VID_SCALE
 			// With some rounding we end up with a 'perfect' scale down to 720x480, don't set this
 			// automatically because we might want the perf boost of skipping lines above.
@@ -108,7 +125,7 @@ void file_to_surface(SDL *sdl, char *video, int *loc, Glyphs *glyphs)
 	free(buffer);
 
 	// Every 60 lines there's a blank line, we need to skip it.
-	*loc += 2;
+	*loc += LINE_END;
 }
 
 void PrintFPS(SDL *sdl, TTF_Font *font)
