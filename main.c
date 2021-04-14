@@ -1,9 +1,10 @@
 #include "main.h"
 
-#define MEM_SIZE (1024 * 1000 * 15)
 #define LINE_END        1   // Linux
 #define FRAME_LINES     60  // Total lines in a "frame"
 #define FRAME_LINE_SIZE 161 // Total number of chars on a single "frame" line
+
+//#define VID_SCALE
 
 int main(void)
 {
@@ -22,17 +23,19 @@ int main(void)
 	TTF_Init();
 
 	TTF_Font *font = TTF_OpenFont(videoFont, 9);
-
 	FILE *video = fopen(videoFile, "r");
-
 	int total_lines = 0;
+	total_lines = 395341;
+	/* // calc is super slow! Yikes!
 	for (char c = fgetc(video); c != EOF; c = fgetc(video)) {
-		if (c == '\n') {
+		//if (c == '\n') {
+		if (__builtin_expect((c == '\n'), 0)) {
 			total_lines++;
 		}
+		//debugResetCursor();
+		//debugPrint("Calculating total lines: %d", total_lines);
 	}
-	rewind(video);
-
+	rewind(video);*/
 	int total_frames     = total_lines / (FRAME_LINES + 1); // 1 empty line per frame
 	int frame_bytes      = FRAME_LINE_SIZE * FRAME_LINES + LINE_END;
 	int total_video_size = total_frames * frame_bytes;
@@ -84,6 +87,8 @@ int main(void)
 			SDL_UpdateWindowSurface(sdl->window);
 			Frame++;
 			frames_q++;
+		} else {
+			goto the_end;
 		}
 
 		while (SDL_PollEvent(&sdl->event)) {
@@ -95,6 +100,10 @@ int main(void)
 	}
 
 the_end:
+	free(video_mem);
+#ifdef NXDK
+	XReboot();
+#endif
 	return 0;
 }
 
@@ -108,7 +117,8 @@ void file_to_surface(SDL *sdl, char *video, int *loc, Glyphs *glyphs)
 
 #ifdef NXDK
 		// Don't waste time drawing lines we can't even see, we lose about 20 lines on Xbox with 720x480.
-		if (y > 40)
+		//if (y > 40)
+		if (__builtin_expect((y > 40), 0))
 			continue;
 #endif
 
