@@ -7,6 +7,7 @@
 Timer Updatefps;
 int Frame = 0;
 Timer fps = {0, 0};
+#define VID_SCALE
 
 int main(void)
 {
@@ -100,26 +101,20 @@ the_end:
 
 void memoryToSurface(SDL_Surface *surface, char **video, Glyph *glyphs)
 {
-	char *buffer = malloc(FRAME_LINE_SIZE);
-
 	for (int y = 0; y < FRAME_LINES; y++) {
-		memcpy(buffer, *video, (FRAME_LINE_SIZE - LINE_END));
-		*video += FRAME_LINE_SIZE;
-
 		for (int x = 0; x < FRAME_LINE_SIZE - LINE_END; x++) {
 #ifdef VID_SCALE
 			// With some rounding we end up with a 'perfect' scale down to 720x480.
-			SDL_Rect location = {x * glyphs[(uint8_t)buffer[x]-32].advance / (float)1.11, 
-					y * glyphs[(uint8_t)buffer[x]-32].surface->h / (float)1.39, 
+			SDL_Rect location = {x * glyphs[(*video)[x] - 32].advance / (float)1.11, 
+					y * glyphs[(*video)[x] - 32].surface->h / (float)1.39, 
 					0, 0};
 #else
-			SDL_Rect location = {x * glyphs[(uint8_t)buffer[x]-32].advance, y * glyphs[(uint8_t)buffer[x]-32].surface->h, 0, 0};
+			SDL_Rect location = {x * glyphs[(*video)[x] - 32].advance, y * glyphs[(*video)[x] - 32].surface->h, 0, 0};
 #endif
-			SDL_BlitSurface(glyphs[(uint8_t)buffer[x]-32].surface, NULL, surface, &location);
+			SDL_BlitSurface(glyphs[(*video)[x] - 32].surface, NULL, surface, &location);
 		}
+		*video += FRAME_LINE_SIZE;
 	}
-
-	free(buffer);
 
 	// Every 60 lines there's a blank line, we need to skip it.
 	*video += LINE_END;
@@ -150,7 +145,7 @@ void displayFrames(SDL *sdl, TTF_Font *font)
 	}
 
 	if (sdl->fpsSurface == NULL) {
-		sdl->fpsSurface = TTF_RenderText_Solid(font, "FPS:0", color);
+		sdl->fpsSurface = TTF_RenderText_Solid(font, "FPS: 0", color);
 	}
 	SDL_Rect location = {WIDTH - sdl->fpsSurface->w, 0, 0, 0};
 	SDL_BlitSurface(sdl->fpsSurface, NULL, sdl->windowSurface, &location);
