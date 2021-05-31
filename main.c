@@ -5,10 +5,7 @@
 #define FRAME_LINE_SIZE 161 // Total number of chars on a single "frame" line
 
 Timer Updatefps;
-
-// Why global?
 int Frame = 0;
-
 Timer fps = {0, 0};
 
 int main(void)
@@ -26,7 +23,6 @@ int main(void)
 	sdl->windowSurface = SDL_GetWindowSurface(sdl->window);
 
 	TTF_Init();
-
 	TTF_Font *font = TTF_OpenFont(videoFont, 9);
 
 	// Load up the video.
@@ -41,7 +37,7 @@ int main(void)
 
 	fclose(video);
 
-	// Pre-render our text glyphs and populate their 'metrics'.
+	// Pre-render our text glyphs and populate their 'metrics'. Save some memory by not populating control characters.
 	SDL_Color textColor = {0x80, 0x80, 0x80, 0xFF};
 	Glyph textGlyphs[(128 - 32)];
 
@@ -50,6 +46,9 @@ int main(void)
 		TTF_GlyphMetrics(font, i+32, NULL, NULL, NULL, NULL, &textGlyphs[i].advance);
 	}
 	// ===
+
+	int currentFrame = 0;
+	int totalFrames = videoSize / (FRAME_LINE_SIZE * FRAME_LINES);
 
 	// Now with audio!
 	/*Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024);
@@ -64,17 +63,22 @@ int main(void)
 		// Clear the screen
 		SDL_FillRect(sdl->windowSurface, NULL, 0);
 
-		memoryToSurface(sdl->windowSurface, &videoMem, &textGlyphs);
-		displayFrames(sdl, font);
+		if (__builtin_expect((currentFrame < totalFrames), 1)) {
+			memoryToSurface(sdl->windowSurface, &videoMem, &textGlyphs);
+			displayFrames(sdl, font);
 
-		if ((SDL_GetTicks() - fps.lastTime) < (1000 / FRAME_PER_SECOND)) {
-			SDL_Delay(1000 / FRAME_PER_SECOND - (SDL_GetTicks() - fps.lastTime));
+			if ((SDL_GetTicks() - fps.lastTime) < (1000 / FRAME_PER_SECOND)) {
+				SDL_Delay(1000 / FRAME_PER_SECOND - (SDL_GetTicks() - fps.lastTime));
+			}
+
+			fps.lastTime = SDL_GetTicks();
+
+			SDL_UpdateWindowSurface(sdl->window);
+			Frame++;
+			currentFrame++;
+		} else {
+			goto the_end;
 		}
-
-		fps.lastTime = SDL_GetTicks();
-
-		SDL_UpdateWindowSurface(sdl->window);
-		Frame++;
 
 		while (SDL_PollEvent(&sdl->event)) {
 			if (sdl->event.type == SDL_QUIT) {
@@ -85,7 +89,9 @@ int main(void)
 	}
 
 the_end:
-	free(videoMem);
+	SDL_Quit();
+	TTF_Quit();
+	//Mix_Quit();
 #ifdef NXDK
 	XReboot();
 #endif
@@ -100,16 +106,9 @@ void memoryToSurface(SDL_Surface *surface, char **video, Glyph *glyphs)
 		memcpy(buffer, *video, (FRAME_LINE_SIZE - LINE_END));
 		*video += FRAME_LINE_SIZE;
 
-#ifdef NXDK
-		// Don't waste time drawing lines we can't even see, we lose about 20 lines on Xbox with 720x480.
-		if (y > 40)
-			continue;
-#endif
-
 		for (int x = 0; x < FRAME_LINE_SIZE - LINE_END; x++) {
 #ifdef VID_SCALE
-			// With some rounding we end up with a 'perfect' scale down to 720x480, don't set this
-			// automatically because we might want the perf boost of skipping lines above.
+			// With some rounding we end up with a 'perfect' scale down to 720x480.
 			SDL_Rect location = {x * glyphs[(uint8_t)buffer[x]-32].advance / (float)1.11, 
 					y * glyphs[(uint8_t)buffer[x]-32].surface->h / (float)1.39, 
 					0, 0};

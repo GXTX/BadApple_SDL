@@ -1,9 +1,10 @@
 #ifdef NXDK
     #include <SDL.h>
     #include <SDL_ttf.h>
-    #include <SDL_mixer.h>
+    //#include <SDL_mixer.h>
     #include <hal/debug.h>
     #include <hal/video.h>
+    #include <hal/xbox.h>
 #else
     #include "SDL2/SDL.h"
     #include "SDL2/SDL_ttf.h"
