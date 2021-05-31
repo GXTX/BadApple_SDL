@@ -41,23 +41,14 @@ typedef struct Timer {
 typedef struct SDL{
 	SDL_Window   *window;
 	SDL_Surface  *windowSurface;
-	SDL_Surface  *fpsCount;
+	SDL_Surface  *fpsSurface;
 	SDL_Event     event;
 } SDL;
 
-typedef struct metrics {
-	int advance;
-} metrics;
-
-typedef struct Glyphs {
+typedef struct Glyph {
 	SDL_Surface *surface;
 	int advance;
-} Glyphs;
+} Glyph;
 
-Timer Updatefps;
-
-// Why global?
-int Frame = 0;
-
-void file_to_surface(SDL *sdl, char *video, int *loc, Glyphs *glyphs);
-void PrintFPS(SDL *sdl, TTF_Font *font);
+void memoryToSurface(SDL_Surface *surface, char **video, Glyph *glyphs);
+void displayFrames(SDL *sdl, TTF_Font *font);

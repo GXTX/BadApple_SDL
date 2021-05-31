@@ -4,7 +4,12 @@
 #define FRAME_LINES     60  // Total lines in a "frame"
 #define FRAME_LINE_SIZE 161 // Total number of chars on a single "frame" line
 
-//#define VID_SCALE
+Timer Updatefps;
+
+// Why global?
+int Frame = 0;
+
+Timer fps = {0, 0};
 
 int main(void)
 {
@@ -23,73 +28,53 @@ int main(void)
 	TTF_Init();
 
 	TTF_Font *font = TTF_OpenFont(videoFont, 9);
-	FILE *video = fopen(videoFile, "r");
-	int total_lines = 0;
-	total_lines = 395341;
-	/* // calc is super slow! Yikes!
-	for (char c = fgetc(video); c != EOF; c = fgetc(video)) {
-		//if (c == '\n') {
-		if (__builtin_expect((c == '\n'), 0)) {
-			total_lines++;
-		}
-		//debugResetCursor();
-		//debugPrint("Calculating total lines: %d", total_lines);
-	}
-	rewind(video);*/
-	int total_frames     = total_lines / (FRAME_LINES + 1); // 1 empty line per frame
-	int frame_bytes      = FRAME_LINE_SIZE * FRAME_LINES + LINE_END;
-	int total_video_size = total_frames * frame_bytes;
-	int frames_q = 0;
 
-	// Push half of the video into memory.
-	char *video_mem = malloc(total_video_size);
-	fread(video_mem, 1, total_video_size, video);
+	// Load up the video.
+	FILE *video = fopen(videoFile, "r");
+
+	fseek(video, 0, SEEK_END);
+	int videoSize = ftell(video);
+	fseek(video, 0, SEEK_SET);
+
+	char *videoMem = malloc(videoSize);
+	fread(videoMem, 1, videoSize, video);
+
 	fclose(video);
 
-	// Used to move the pointer location of the video.
-	int pointer_location = 0;
-
 	// Pre-render our text glyphs and populate their 'metrics'.
-	SDL_Color text_color = {0x80, 0x80, 0x80, 0xFF};
-	Glyphs glyphs[96];
+	SDL_Color textColor = {0x80, 0x80, 0x80, 0xFF};
+	Glyph textGlyphs[(128 - 32)];
 
-	for (int i = 32; i < 128; i++) {
-		glyphs[i-32].surface = TTF_RenderGlyph_Solid(font, i, text_color);
-		TTF_GlyphMetrics(font, i, NULL, NULL, NULL, NULL, &glyphs[i-32].advance);
+	for (int i = 0; i < (128 - 32); i++) {
+		textGlyphs[i].surface = TTF_RenderGlyph_Solid(font, i+32, textColor);
+		TTF_GlyphMetrics(font, i+32, NULL, NULL, NULL, NULL, &textGlyphs[i].advance);
 	}
 	// ===
 
-	Timer fps = {SDL_GetTicks(), 0};
-
 	// Now with audio!
-	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024);
+	/*Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024);
 	Mix_Init(MIX_INIT_OGG);
 
 	Mix_Music *audio = Mix_LoadMUS(music);
 
 	Mix_VolumeMusic(MIX_MAX_VOLUME);
-	Mix_PlayMusic(audio, 1);
+	Mix_PlayMusic(audio, 1);*/
 
 	while (1) {
-		if (__builtin_expect((frames_q < total_frames), 1)) {
-			// Clear the screen
-			SDL_FillRect(sdl->windowSurface, NULL, 0);
+		// Clear the screen
+		SDL_FillRect(sdl->windowSurface, NULL, 0);
 
-			file_to_surface(sdl, video_mem, &pointer_location, &glyphs);
-			PrintFPS(sdl, font);
+		memoryToSurface(sdl->windowSurface, &videoMem, &textGlyphs);
+		displayFrames(sdl, font);
 
-			if ((SDL_GetTicks() - fps.lastTime) < (1000 / FRAME_PER_SECOND)) {
-				SDL_Delay(1000 / FRAME_PER_SECOND - (SDL_GetTicks() - fps.lastTime));
-			}
-
-			fps.lastTime = SDL_GetTicks();
-
-			SDL_UpdateWindowSurface(sdl->window);
-			Frame++;
-			frames_q++;
-		} else {
-			goto the_end;
+		if ((SDL_GetTicks() - fps.lastTime) < (1000 / FRAME_PER_SECOND)) {
+			SDL_Delay(1000 / FRAME_PER_SECOND - (SDL_GetTicks() - fps.lastTime));
 		}
+
+		fps.lastTime = SDL_GetTicks();
+
+		SDL_UpdateWindowSurface(sdl->window);
+		Frame++;
 
 		while (SDL_PollEvent(&sdl->event)) {
 			if (sdl->event.type == SDL_QUIT) {
@@ -100,25 +85,24 @@ int main(void)
 	}
 
 the_end:
-	free(video_mem);
+	free(videoMem);
 #ifdef NXDK
 	XReboot();
 #endif
 	return 0;
 }
 
-void file_to_surface(SDL *sdl, char *video, int *loc, Glyphs *glyphs)
+void memoryToSurface(SDL_Surface *surface, char **video, Glyph *glyphs)
 {
 	char *buffer = malloc(FRAME_LINE_SIZE);
 
 	for (int y = 0; y < FRAME_LINES; y++) {
-		memcpy(buffer, (video + *loc), FRAME_LINE_SIZE - LINE_END);
-		*loc += FRAME_LINE_SIZE;
+		memcpy(buffer, *video, (FRAME_LINE_SIZE - LINE_END));
+		*video += FRAME_LINE_SIZE;
 
 #ifdef NXDK
 		// Don't waste time drawing lines we can't even see, we lose about 20 lines on Xbox with 720x480.
-		//if (y > 40)
-		if (__builtin_expect((y > 40), 0))
+		if (y > 40)
 			continue;
 #endif
 
@@ -132,17 +116,18 @@ void file_to_surface(SDL *sdl, char *video, int *loc, Glyphs *glyphs)
 #else
 			SDL_Rect location = {x * glyphs[(uint8_t)buffer[x]-32].advance, y * glyphs[(uint8_t)buffer[x]-32].surface->h, 0, 0};
 #endif
-			SDL_BlitSurface(glyphs[(uint8_t)buffer[x]-32].surface, NULL, sdl->windowSurface, &location);
+			SDL_BlitSurface(glyphs[(uint8_t)buffer[x]-32].surface, NULL, surface, &location);
 		}
 	}
 
 	free(buffer);
 
 	// Every 60 lines there's a blank line, we need to skip it.
-	*loc += LINE_END;
+	*video += LINE_END;
 }
 
-void PrintFPS(SDL *sdl, TTF_Font *font)
+// TODO: Magic, idk
+void displayFrames(SDL *sdl, TTF_Font *font)
 {
 	char fpsch[10] = "FPS:";
 	int temptime;
@@ -161,13 +146,13 @@ void PrintFPS(SDL *sdl, TTF_Font *font)
 	if (Updatefps.time >= 1000) {
 		Updatefps.time = 0;
 		sprintf(fpsch, "FPS: %i", Frame);
-		sdl->fpsCount = TTF_RenderText_Solid(font, fpsch, color);
+		sdl->fpsSurface = TTF_RenderText_Solid(font, fpsch, color);
 		Frame = 0;
 	}
 
-	if (sdl->fpsCount == NULL) {
-		sdl->fpsCount = TTF_RenderText_Solid(font, "FPS:0", color);
+	if (sdl->fpsSurface == NULL) {
+		sdl->fpsSurface = TTF_RenderText_Solid(font, "FPS:0", color);
 	}
-	SDL_Rect location = {WIDTH - sdl->fpsCount->w, 0, 0, 0};
-	SDL_BlitSurface(sdl->fpsCount, NULL, sdl->windowSurface, &location);
+	SDL_Rect location = {WIDTH - sdl->fpsSurface->w, 0, 0, 0};
+	SDL_BlitSurface(sdl->fpsSurface, NULL, sdl->windowSurface, &location);
 }
