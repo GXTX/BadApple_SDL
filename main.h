@@ -8,29 +8,20 @@
 #else
     #include "SDL2/SDL.h"
     #include "SDL2/SDL_ttf.h"
-    #include "SDL2/SDL_mixer.h"
+    //#include "SDL2/SDL_mixer.h"
 #endif
 
-#include <errno.h>
-#include <stdlib.h>
-
-#ifdef NXDK
-    #define WIDTH 720
-    #define HEIGHT 480
-#else
-    #define WIDTH 800
-    #define HEIGHT 660
-#endif
-
+#define WIDTH 640
+#define HEIGHT 480
 #define FRAME_PER_SECOND 30
 
 #ifdef NXDK
 	static const char *videoFont  = "D:\\resource\\consola.ttf";
-	static const char *music = "D:\\resource\\Badapple.ogg";
+	//static const char *music = "D:\\resource\\Badapple.ogg";
 	static const char *videoFile = "D:\\resource\\AscPic.txt";
 #else
 	static const char *videoFont  = "resource/consola.ttf";
-	static const char *music = "resource/Badapple.mp3";
+	//static const char *music = "resource/Badapple.mp3";
 	static const char *videoFile = "resource/AscPic.txt";
 #endif
 

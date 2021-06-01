@@ -7,7 +7,6 @@
 Timer Updatefps;
 int Frame = 0;
 Timer fps = {0, 0};
-#define VID_SCALE
 
 int main(void)
 {
@@ -24,7 +23,7 @@ int main(void)
 	sdl->windowSurface = SDL_GetWindowSurface(sdl->window);
 
 	TTF_Init();
-	TTF_Font *font = TTF_OpenFont(videoFont, 9);
+	TTF_Font *font = TTF_OpenFont(videoFont, 7);
 
 	// Load up the video.
 	FILE *video = fopen(videoFile, "r");
@@ -103,14 +102,10 @@ void memoryToSurface(SDL_Surface *surface, char **video, Glyph *glyphs)
 {
 	for (int y = 0; y < FRAME_LINES; y++) {
 		for (int x = 0; x < FRAME_LINE_SIZE - LINE_END; x++) {
-#ifdef VID_SCALE
-			// With some rounding we end up with a 'perfect' scale down to 720x480.
-			SDL_Rect location = {x * glyphs[(*video)[x] - 32].advance / (float)1.11, 
-					y * glyphs[(*video)[x] - 32].surface->h / (float)1.39, 
+			// With some rounding we end up with a 'perfect' scale down to 640x480.
+			SDL_Rect location = {x * glyphs[(*video)[x] - 32].advance /*/ (float)1.0025*/, 
+					y * glyphs[(*video)[x] - 32].surface->h / (float)1.125, 
 					0, 0};
-#else
-			SDL_Rect location = {x * glyphs[(*video)[x] - 32].advance, y * glyphs[(*video)[x] - 32].surface->h, 0, 0};
-#endif
 			SDL_BlitSurface(glyphs[(*video)[x] - 32].surface, NULL, surface, &location);
 		}
 		*video += FRAME_LINE_SIZE;
